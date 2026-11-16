@@ -15,14 +15,23 @@ const csPages = [
   ['capacity','Capacity','C4'],['coordinate','Coordinate','C5']
 ];
 
-// Docker Moby — a stack of containers riding a whale. Inherits currentColor.
-function MobyLogo({className='',size=30}) {
-  return <svg className={className} width={size} height={size*0.74} viewBox="0 0 48 34" fill="currentColor" role="img" aria-label="Docker Moby">
-    <rect x="10" y="14" width="5" height="5" rx=".6"/><rect x="16" y="14" width="5" height="5" rx=".6"/>
-    <rect x="22" y="14" width="5" height="5" rx=".6"/><rect x="28" y="14" width="5" height="5" rx=".6"/>
-    <rect x="16" y="8" width="5" height="5" rx=".6"/><rect x="22" y="8" width="5" height="5" rx=".6"/>
-    <rect x="28" y="8" width="5" height="5" rx=".6"/><rect x="22" y="2" width="5" height="5" rx=".6"/>
-    <path d="M47.6 19.1c-1-.7-3.1-.9-4.7-.6-.2-1.4-1-2.7-2.3-3.6l-.8-.5-.5.8c-.7 1.1-.9 2.7-.7 4 .1.6.4 1.2.8 1.6-.6.3-1.5.5-2.4.5H1.4c-.3 0-.5.2-.5.5-.2 2.2.2 4.4 1.1 6.3C3.1 30.9 5.9 32 9.4 32c9.8 0 18.2-4.4 22.1-14.2 1.6.1 5 0 6.8-3.3.1-.2.4-.7.6-1.5-.1 0 .6.1 1.1.1z"/>
+// Swaggy — a friendly AI agent. Head/accents use currentColor so the mark
+// themes to its surroundings; eyes stay light for contrast on any background.
+function AgentLogo({className='',size=30}) {
+  return <svg className={className} width={size} height={size} viewBox="0 0 48 48" fill="none" role="img" aria-label="Swaggy agent">
+    <path d="M24 10V6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"/>
+    <circle cx="24" cy="4.4" r="2.6" fill="currentColor"/>
+    <rect x="3.5" y="21.5" width="5" height="9" rx="2.5" fill="currentColor"/>
+    <rect x="39.5" y="21.5" width="5" height="9" rx="2.5" fill="currentColor"/>
+    <rect x="8.5" y="11" width="31" height="28" rx="8.5" fill="currentColor"/>
+    <rect x="15" y="20" width="7.5" height="6.5" rx="3.25" fill="#fff"/>
+    <rect x="25.5" y="20" width="7.5" height="6.5" rx="3.25" fill="#fff"/>
+    <rect x="19" y="31" width="10" height="2.6" rx="1.3" fill="#ffffffb3"/>
+    <g fill="currentColor" opacity=".5">
+      <path d="M4.5 34.7 6.8 37 4.5 39.3 2.2 37Z"/>
+      <path d="M43.5 34.7 45.8 37 43.5 39.3 41.2 37Z"/>
+      <path d="M24 43.2 26.3 45.5 24 47.8 21.7 45.5Z"/>
+    </g>
   </svg>;
 }
 
@@ -86,19 +95,19 @@ export default function App() {
 
   return <div className="app-shell">
     <header className="topbar">
-      <a className="brand" href="#store" onClick={()=>setPage('store')}><MobyLogo className="brand-logo" size={30}/> SWAGGY</a>
+      <a className="brand" href="#store" onClick={()=>setPage('store')}><AgentLogo className="brand-logo" size={30}/> SWAGGY</a>
       <nav className="top-nav">{topPages.map(([id,label])=><button key={id} className={page===id?'active':''} onClick={()=>setPage(id)}>{label}</button>)}</nav>
       <span className="status"><i/> LAB ENVIRONMENT</span>
     </header>
     <div className="shell-body">
     <aside className="cs-sidebar">
-      <div className="cs-sidebar-head"><MobyLogo size={26}/><div><b>5Cs</b><small>Agent Safety</small></div></div>
+      <div className="cs-sidebar-head"><AgentLogo size={26}/><div><b>5Cs</b><small>Agent Safety</small></div></div>
       <nav className="cs-nav">{csPages.map(([id,label,num])=><button key={id} className={page===id?'active':''} onClick={()=>setPage(id)}><span className="cs-num">{num}</span><span>{label}</span></button>)}</nav>
       <p className="cs-sidebar-note">Five independent controls that keep an AI agent safe — each with a live lab.</p>
     </aside>
     <main>
       {page==='store'&&<>
-        <section className="hero"><div className="eyebrow">THE DEVELOPER MERCH STORE · POWERED BY AI</div><h1>Build. Ship.<br/><em>Wear.</em></h1><p>A real store database behind an AI employee. Explore the merchandise, then explore what happens when an agent gets permissions.</p><button className="primary-btn" onClick={()=>setPage('assistant')}>Meet Swaggy <span aria-hidden="true">↓</span></button><div className="hero-stamp"><MobyLogo className="stamp-logo" size={40}/><b>5Cs</b><span>AGENT SAFETY</span></div></section>
+        <section className="hero"><div className="eyebrow">THE DEVELOPER MERCH STORE · POWERED BY AI</div><h1>Build. Ship.<br/><em>Wear.</em></h1><p>A real store database behind an AI employee. Explore the merchandise, then explore what happens when an agent gets permissions.</p><button className="primary-btn" onClick={()=>setPage('assistant')}>Meet Swaggy <span aria-hidden="true">↓</span></button><div className="hero-stamp"><AgentLogo className="stamp-logo" size={40}/><b>5Cs</b><span>AGENT SAFETY</span></div></section>
         <section className="store-section"><div className="section-heading"><div><div className="eyebrow">THE COLLECTION</div><h2>Made for builders.</h2></div><span className="count">{products.length} PRODUCTS</span></div>
           <div className="product-grid">{products.map((p,i)=><article className="product-card" key={p.sku}><div className={'product-art art-'+(i%5)}><span className="art-mark">{['🐳','▣','☕','◈','✳'][i%5]}</span><span className="art-label">SWAG / {String(i+1).padStart(2,'0')}</span></div><div className="product-meta"><div><h3>{p.name}</h3><p>{p.description}</p></div><strong>{money(p.price_rupees)}</strong></div><div className="stock-line"><span>{p.sku}</span><span>{p.stock} in stock</span></div></article>)}</div>
         </section>
@@ -142,7 +151,7 @@ export default function App() {
     <section className={`swaggy-widget ${widgetOpen?'is-open':''}`} aria-label="Swaggy chat assistant">
       {widgetOpen&&<div className="swaggy-widget-panel" role="dialog" aria-label="Chat with Swaggy">
         <div className="swaggy-widget-head">
-          <div className="swaggy-widget-avatar"><MobyLogo size={24}/></div>
+          <div className="swaggy-widget-avatar"><AgentLogo size={24}/></div>
           <div className="swaggy-widget-title"><b>Swaggy</b><small>AI store assistant · Ask me anything</small></div>
           <button className="swaggy-widget-close" onClick={()=>setWidgetOpen(false)} aria-label="Close chat">×</button>
         </div>
@@ -157,7 +166,7 @@ export default function App() {
         <div className="swaggy-widget-foot">Product help · Store questions · 5Cs security labs</div>
       </div>}
       <button className="swaggy-widget-launcher" onClick={()=>setWidgetOpen(v=>!v)} aria-label={widgetOpen?'Close Swaggy chat':'Open Swaggy chat'} aria-expanded={widgetOpen}>
-        {widgetOpen?<span className="swaggy-launcher-close">×</span>:<><span className="swaggy-launcher-whale"><MobyLogo size={26}/></span><span className="swaggy-launcher-label">Chat with Swaggy</span></>}
+        {widgetOpen?<span className="swaggy-launcher-close">×</span>:<><span className="swaggy-launcher-whale"><AgentLogo size={26}/></span><span className="swaggy-launcher-label">Chat with Swaggy</span></>}
       </button>
     </section>
     <footer><b>SWAGGY</b><span>5Cs for safer AI agents</span><span>CONTAIN · CONTROL · CHOICE · CAPACITY · COORDINATE</span></footer>
