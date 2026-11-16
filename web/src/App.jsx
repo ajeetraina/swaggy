@@ -41,6 +41,19 @@ function Metric({label,value,detail}) {
 function PolicyCard({number,title,summary,items,status='ENFORCED'}) {
   return <article className="policy-card"><div className="policy-number">{number}</div><div className="policy-copy"><div className="policy-status">{status}</div><h3>{title}</h3><p>{summary}</p><ul>{items.map(item=><li key={item}>{item}</li>)}</ul></div></article>;
 }
+// Shows a real product photo from /public/products/<sku>.<ext> when present,
+// trying a few extensions, then falls back to a type icon tile.
+function ProductArt({sku,icon,bg,label}) {
+  const exts=['jpg','png','webp','jpeg'];
+  const [idx,setIdx]=useState(0);
+  const failed=idx>=exts.length;
+  return <div className={'product-art '+bg}>
+    {failed
+      ? <span className="art-mark">{icon}</span>
+      : <img className="product-photo" src={`/products/${sku}.${exts[idx]}`} alt="" loading="lazy" onError={()=>setIdx(n=>n+1)}/>}
+    <span className="art-label">{label}</span>
+  </div>;
+}
 
 export default function App() {
   const [products,setProducts]=useState([]);
@@ -97,6 +110,17 @@ export default function App() {
       await refresh();
     } catch(e){setError(e.message);}
   }
+  const artFor=(p)=>{const s=`${p.name} ${p.sku} ${p.category||''}`.toLowerCase();
+    if(/hood/.test(s))return '🧥';
+    if(/tee|t-shirt|tshirt|shirt/.test(s))return '👕';
+    if(/mug|cup/.test(s))return '☕';
+    if(/cap|hat|beanie/.test(s))return '🧢';
+    if(/stick|decal/.test(s))return '🏷️';
+    if(/sock/.test(s))return '🧦';
+    if(/bottle|flask/.test(s))return '🍶';
+    if(/pin|badge|button/.test(s))return '📌';
+    if(/tote|bag|backpack/.test(s))return '👜';
+    return '🐳';};
   const promptButton=(prompt,label=prompt)=><button className="lab-prompt" key={prompt} disabled={busy} onClick={()=>{setPage('assistant');send(prompt);}}>{label}<span>↗</span></button>;
   const sectionTitle=(eyebrow,title,sub)=><div className="page-heading"><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{sub}</p></div>;
 
@@ -116,7 +140,7 @@ export default function App() {
       {page==='store'&&<>
         <section className="hero"><div className="eyebrow">THE DEVELOPER MERCH STORE · POWERED BY AI</div><h1>Build. Ship.<br/><em>Wear.</em></h1><p>A real store database behind an AI employee. Explore the merchandise, then explore what happens when an agent gets permissions.</p><button className="primary-btn" onClick={()=>setPage('assistant')}>Meet Swaggy <span aria-hidden="true">↓</span></button><div className="hero-stamp"><AgentLogo className="stamp-logo" size={40}/><b>5Cs</b><span>AGENT SAFETY</span></div></section>
         <section className="store-section"><div className="section-heading"><div><div className="eyebrow">THE COLLECTION</div><h2>Made for builders.</h2></div><span className="count">{products.length} PRODUCTS</span></div>
-          <div className="product-grid">{products.map((p,i)=><article className="product-card" key={p.sku}><div className={'product-art art-'+(i%5)}><span className="art-mark">{['🐳','▣','☕','◈','✳'][i%5]}</span><span className="art-label">SWAG / {String(i+1).padStart(2,'0')}</span></div><div className="product-meta"><div><h3>{p.name}</h3><p>{p.description}</p></div><strong>{money(p.price_rupees)}</strong></div><div className="stock-line"><span>{p.sku}</span><span>{p.stock} in stock</span></div></article>)}</div>
+          <div className="product-grid">{products.map((p,i)=><article className="product-card" key={p.sku}><ProductArt sku={p.sku} icon={artFor(p)} bg={'art-'+(i%5)} label={`${p.category||'SWAG'} / ${String(i+1).padStart(2,'0')}`}/><div className="product-meta"><div><h3>{p.name}</h3><p>{p.description}</p></div><strong>{money(p.price_rupees)}</strong></div><div className="stock-line"><span>{p.sku}</span><span>{p.stock} in stock</span></div></article>)}</div>
         </section>
       </>}
       {page==='assistant'&&<section className="workspace-page">{sectionTitle('YOUR AI STORE EMPLOYEE','Meet Swaggy.','One assistant. Real database tools. Independent runtime and server-side controls.') }
