@@ -25,3 +25,12 @@ CREATE TABLE IF NOT EXISTS agent_audit (
   decision TEXT NOT NULL,
   detail TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS pending_actions (
+  id BIGSERIAL PRIMARY KEY,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  action TEXT NOT NULL CHECK (action IN ('update_price','set_inventory')),
+  arguments JSONB NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  resolved_at TIMESTAMPTZ
+);
