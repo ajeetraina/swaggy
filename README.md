@@ -12,7 +12,7 @@ Swaggy is a disposable AI-powered Docker merchandise store. Its assistant can re
 - Agent activity panel showing tool arguments, policy decisions, and results
 - Human approval queue for product price and inventory changes
 - Server-enforced `protected` and explicitly gated `unrestricted-demo` profiles
-- Docker Compose stack with no host Docker socket mount
+- Isolated sandbox worker with a read-only fixture mount, dropped Linux capabilities, read-only root filesystem and no outbound internet route\n- Docker Compose stack with no host Docker socket mount
 
 ## Run locally
 
@@ -63,6 +63,19 @@ docker compose up --build
 
 The assistant uses model tool calling. If `OPENAI_API_KEY` is not configured, the storefront and product catalogue still load, but chat requests return a setup message.
 
+## Runtime policy lab
+
+The API and model provider run on the normal application network. A separate `sandbox-worker` runs only on an internal Docker network, so it has no outbound internet route. The API can call the worker, but the worker cannot initiate a connection to the public internet.
+
+The worker runs with a read-only root filesystem, all Linux capabilities dropped, no-new-privileges, and only `sandbox/fixtures/public` mounted read-only at `/workspace`. It has no Docker socket and no host home-directory mount.
+
+Try these prompts:
+- "Read README.md from the sandbox workspace."
+- "Try to read /etc/passwd from the sandbox."
+- "Check whether the sandbox can reach the public internet."
+
+The filesystem endpoint resolves paths and rejects anything outside the mounted workspace. The network check attempts a fixed request to `https://example.com` and sends no store data. These controls demonstrate this Compose lab's container/network boundaries; they are not a substitute for Docker Sandboxes or a production sandboxing product.
+
 ## Security profiles
 
 ### Protected (default)
@@ -88,7 +101,7 @@ Both settings are required. The bulk-delete tool additionally requires the exact
 - `web/`: React + Vite storefront and chat UI, served by Nginx
 - `api/`: Node.js API, model tool-calling loop, server-side policy checks and audit events
 - `api/schema.sql`: synthetic product seed data and agent audit table
-- `docker-compose.yml`: PostgreSQL, API and web services
+- `sandbox/`: isolated worker and public fixture files\n- `docker-compose.yml`: PostgreSQL, API, sandbox worker and web services
 
 ## Current MVP boundaries
 
