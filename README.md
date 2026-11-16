@@ -12,7 +12,8 @@ Swaggy is a disposable AI-powered Docker merchandise store. Its assistant can re
 - Agent activity panel showing tool arguments, policy decisions, and results
 - Human approval queue for product price and inventory changes
 - Server-enforced `protected` and explicitly gated `unrestricted-demo` profiles
-- Isolated sandbox worker with a read-only fixture mount, dropped Linux capabilities, read-only root filesystem and no outbound internet route\n- Docker Compose stack with no host Docker socket mount
+- Isolated sandbox worker with a read-only fixture mount, dropped Linux capabilities, read-only root filesystem and no outbound internet route
+- Docker Compose stack with no host Docker socket mount
 
 ## Run locally
 
@@ -111,7 +112,8 @@ Both settings are required. The bulk-delete tool additionally requires the exact
 - `web/`: React + Vite storefront and chat UI, served by Nginx
 - `api/`: Node.js API, model tool-calling loop, server-side policy checks and audit events
 - `api/schema.sql`: synthetic product seed data and agent audit table
-- `sandbox/`: isolated worker and public fixture files\n- `docker-compose.yml`: PostgreSQL, API, sandbox worker and web services
+- `sandbox/`: isolated worker and public fixture files
+- `docker-compose.yml`: PostgreSQL, API, sandbox worker and web services
 
 ## Current MVP boundaries
 
