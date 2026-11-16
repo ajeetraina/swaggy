@@ -24,6 +24,8 @@ jobs:
       - name: Install web dependencies
         working-directory: web
         run: npm install
+      - name: Build all container images
+        run: docker compose build
       - name: Build storefront
         working-directory: web
         run: npm run build
