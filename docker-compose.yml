@@ -15,6 +15,23 @@ services:
       retries: 15
     networks: [swaggy]
 
+  sandbox-worker:
+    build: ./sandbox
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    volumes:
+      - ./sandbox/fixtures/public:/workspace:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4100/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [sandbox]
+
   api:
     build: ./api
     environment:
@@ -25,11 +42,14 @@ services:
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       SECURITY_PROFILE: ${SECURITY_PROFILE:-protected}
       ALLOW_DESTRUCTIVE_DEMO: ${ALLOW_DESTRUCTIVE_DEMO:-false}
+      SANDBOX_URL: http://sandbox-worker:4100
     depends_on:
       db:
         condition: service_healthy
+      sandbox-worker:
+        condition: service_healthy
     ports: ["127.0.0.1:4000:4000"]
-    networks: [swaggy]
+    networks: [swaggy, sandbox]
 
   web:
     build: ./web
@@ -43,3 +63,5 @@ volumes:
 networks:
   swaggy:
     internal: false
+  sandbox:
+    internal: true
