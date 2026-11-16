@@ -87,6 +87,18 @@ The interface has a dedicated page for each principle:
 4. **Capacity** — CPU, memory, PID, file-size and per-turn tool budgets.
 5. **Coordinate** — human approvals and the audit trail.
 
+## Complete workshop materials
+
+The five principles now have dedicated, hands-on lab guides and a timed facilitator run sheet:
+
+- [Workshop index and setup](docs/README.md)
+- [30-minute facilitator guide](docs/FACILITATOR-GUIDE.md)
+- [Lab 1 — Contain](docs/LAB-1-CONTAIN.md)
+- [Lab 2 — Control](docs/LAB-2-CONTROL.md)
+- [Lab 3 — Choice](docs/LAB-3-CHOICE.md)
+- [Lab 4 — Capacity](docs/LAB-4-CAPACITY.md)
+- [Lab 5 — Coordinate](docs/LAB-5-COORDINATE.md)
+
 ## Security profiles
 
 ### Protected (default)
