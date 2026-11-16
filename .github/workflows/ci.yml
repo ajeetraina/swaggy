@@ -1,0 +1,23 @@
+name: Swaggy CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check API syntax
+        run: node --check api/server.js
+      - name: Install web dependencies
+        working-directory: web
+        run: npm install
+      - name: Build storefront
+        working-directory: web
+        run: npm run build
