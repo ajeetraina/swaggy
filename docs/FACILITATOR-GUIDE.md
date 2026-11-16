@@ -11,8 +11,8 @@
 
 ## Before attendees arrive
 
-- [ ] Clone the repository and run docker compose up --build.
-- [ ] Add a working OpenAI-compatible API key/model to .env if using live chat.
+- [ ] Clone the repository and start the sandbox from its root: sbx run --clone claude . (requires sbx 0.39.0+, signed in). Inside the sandbox, run docker compose up -d --build. Back on the host, publish the ports: sbx port publish claude-swaggy 5173:5173 4000:4000. See the README for the Docker Compose fallback.
+- [ ] Add a working OpenAI-compatible API key/model to .env (inside the sandbox) if using live chat.
 - [ ] Confirm http://localhost:5173 loads.
 - [ ] Confirm http://localhost:4000/api/health reports ok=true and sandbox=online.
 - [ ] Keep SECURITY_PROFILE=protected and ALLOW_DESTRUCTIVE_DEMO=false.

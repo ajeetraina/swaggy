@@ -13,13 +13,25 @@ A hands-on workshop for understanding the five security principles for AI agents
 
 ## Before the workshop
 
+Run the whole stack inside an isolated [Docker Sandbox](https://docs.docker.com/ai/sandboxes/)
+microVM rather than on your host Docker daemon. Requires `sbx` 0.39.0+, signed
+in (`sbx login`).
+
 ~~~bash
 git clone https://github.com/ajeetraina/swaggy.git
 cd swaggy
-cp .env.example .env
-# Add a model API key to .env for the live assistant demo.
-docker compose up --build
+sbx run --clone claude .     # clones the repo into an isolated microVM
+# then, inside the sandbox:
+cp .env.example .env         # add a model API key for the live assistant demo
+docker compose up -d --build
+# back on your host, publish the ports (sandbox name is usually claude-swaggy):
+sbx port publish claude-swaggy 5173:5173 4000:4000
 ~~~
+
+`--clone` runs Swaggy on a private in-container clone of the repo, so your host
+working tree is never mounted. Ports are not exposed automatically — publish
+them from the host as shown. No `sbx`? See the Docker Compose fallback in the
+[top-level README](../README.md#run-directly-with-docker-compose-fallback).
 
 Open http://localhost:5173. Check http://localhost:4000/api/health. The health response should show ok=true, profile=protected, and sandbox=online.
 
