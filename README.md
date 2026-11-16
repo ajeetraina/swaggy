@@ -76,6 +76,16 @@ Try these prompts:
 
 The filesystem endpoint resolves paths and rejects anything outside the mounted workspace. The network check attempts a fixed request to `https://example.com` and sends no store data. These controls demonstrate this Compose lab's container/network boundaries; they are not a substitute for Docker Sandboxes or a production sandboxing product.
 
+## The 5Cs workshop
+
+The interface has a dedicated page for each principle:
+
+1. **Contain** — filesystem and network boundaries.
+2. **Control** — tool allowlists, server-side policy and prompt-injection resistance.
+3. **Choice** — configurable OpenAI-compatible model/provider and explicitly exposed capabilities.
+4. **Capacity** — CPU, memory, PID, file-size and per-turn tool budgets.
+5. **Coordinate** — human approvals and the audit trail.
+
 ## Security profiles
 
 ### Protected (default)
