@@ -15,6 +15,10 @@ jobs:
           node-version: 22
       - name: Check API syntax
         run: node --check api/server.js
+      - name: Check sandbox worker syntax
+        run: node --check sandbox/server.js
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
       - name: Install web dependencies
         working-directory: web
         run: npm install
