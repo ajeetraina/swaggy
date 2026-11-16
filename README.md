@@ -10,6 +10,7 @@ Swaggy is a disposable AI-powered Docker merchandise store. Its assistant can re
 - Chat assistant named **Swaggy**, using an OpenAI-compatible tool-calling API
 - PostgreSQL-backed product and inventory tools
 - Agent activity panel showing tool arguments, policy decisions, and results
+- Human approval queue for product price and inventory changes
 - Server-enforced `protected` and explicitly gated `unrestricted-demo` profiles
 - Docker Compose stack with no host Docker socket mount
 
@@ -68,7 +69,7 @@ The assistant uses model tool calling. If `OPENAI_API_KEY` is not configured, th
 
 `SECURITY_PROFILE=protected`
 
-Read-only catalogue lookups and bounded single-product price/stock updates are available. Product deletion and catalogue-wide deletion are denied by the API before SQL mutation. The denial is written to the audit table and returned to the assistant.
+Read-only catalogue lookups are available immediately. Price and inventory changes create a pending approval; the database is not changed until a human approves through the approval queue. Product deletion and catalogue-wide deletion are denied by the API before SQL mutation. Decisions are written to the audit table.
 
 ### Unrestricted demo (disposable database only)
 
@@ -94,6 +95,7 @@ Both settings are required. The bulk-delete tool additionally requires the exact
 - Products and inventory are real PostgreSQL records.
 - There is no payment flow, checkout, customer account system, or order management yet.
 - The model endpoint must support the OpenAI chat-completions tool-calling format.
+- The approval endpoints are unauthenticated and intended only for a local trusted lab. Compose binds published ports to 127.0.0.1; do not expose them through a public reverse proxy or shared network.
 - This is a workshop prototype, not a production commerce application. Add authentication, authorization, rate limits, CSRF protections, secret management, and stronger approval workflows before exposing it beyond a trusted local lab.
 
 ## Safety principles
