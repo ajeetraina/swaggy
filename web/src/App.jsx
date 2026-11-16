@@ -99,7 +99,7 @@ export default function App() {
     } catch(e){setError(e.message);}
   }
   const artFor=(p)=>{const s=`${p.name} ${p.sku} ${p.category||''}`.toLowerCase();
-    if(/hood/.test(s))return '🧥';
+    if(/hood|jacket|coat/.test(s))return '🧥';
     if(/tee|t-shirt|tshirt|shirt/.test(s))return '👕';
     if(/mug|cup/.test(s))return '☕';
     if(/cap|hat|beanie/.test(s))return '🧢';
@@ -107,7 +107,8 @@ export default function App() {
     if(/sock/.test(s))return '🧦';
     if(/bottle|flask/.test(s))return '🍶';
     if(/pin|badge|button/.test(s))return '📌';
-    if(/tote|bag|backpack/.test(s))return '👜';
+    if(/backpack|rucksack/.test(s))return '🎒';
+    if(/tote|bag|purse/.test(s))return '👜';
     return '🐳';};
   const promptButton=(prompt,label=prompt)=><button className="lab-prompt" key={prompt} disabled={busy} onClick={()=>{setPage('assistant');send(prompt);}}>{label}<span>↗</span></button>;
   const sectionTitle=(eyebrow,title,sub)=><div className="page-heading"><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{sub}</p></div>;
