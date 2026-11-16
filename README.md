@@ -2,45 +2,107 @@
 
 **Your AI store assistant. Your security problem.**
 
-Swaggy is a deliberately small, disposable AI-powered merchandise store built to demonstrate the security risks of giving agents access to real business tools.
+Swaggy is a disposable AI-powered Docker merchandise store. Its assistant can read the catalogue and use business tools to change prices, adjust stock, and attempt destructive actions. The workshop explores what happens when those permissions are too broad—and how independent controls change the outcome.
 
-The same assistant can answer product questions and perform operational actions. The workshop then explores what happens when those permissions are too broad—and how independent controls change the outcome.
+## What is included
 
-## Project goals
+- React storefront with synthetic Docker-themed merchandise
+- Chat assistant named **Swaggy**, using an OpenAI-compatible tool-calling API
+- PostgreSQL-backed product and inventory tools
+- Agent activity panel showing tool arguments, policy decisions, and results
+- Server-enforced `protected` and explicitly gated `unrestricted-demo` profiles
+- Docker Compose stack with no host Docker socket mount
 
-- A Docker-themed merchandise storefront
-- A conversational assistant named **Swaggy**
-- Real product and inventory tools backed by PostgreSQL
-- A visible agent activity trace (intent, tool, arguments, policy decision, result)
-- Explicit `unrestricted-demo` and `protected` security profiles
-- Synthetic data only; destructive exercises target only the disposable Compose database
+## Run locally
 
-## Safety model
+Requirements: Docker Desktop (or Docker Engine) with Compose.
 
-This is a security training application, not a production commerce system.
+```bash
+git clone https://github.com/ajeetraina/swaggy.git
+cd swaggy
+cp .env.example .env
+```
 
-- Never connect it to production databases, credentials, customer data, or infrastructure.
-- The database is seeded with synthetic merchandise and customers only.
-- The application must never mount the host Docker socket.
-- Destructive actions are available only against the disposable lab database.
-- The protected profile enforces policy in the server/tool layer; an LLM refusal is not a security control.
-- The UI must distinguish an agent attempt from a successful operation and show evidence for every policy decision.
+Add your model API key to `.env`:
 
-## Planned architecture
+```dotenv
+OPENAI_API_KEY=your_api_key
+OPENAI_MODEL=gpt-4o-mini
+SECURITY_PROFILE=protected
+ALLOW_DESTRUCTIVE_DEMO=false
+```
 
-- **Web:** React + Vite storefront and chat UI
-- **API:** Node.js service exposing narrowly scoped agent tools
-- **Data:** PostgreSQL with synthetic seed data
-- **Model:** OpenAI-compatible chat-completions endpoint configured through environment variables
-- **Runtime:** Docker Compose, designed to be run inside a Docker Sandbox
+Start the application:
 
-## Development status
+```bash
+docker compose up --build
+```
 
-Initial repository scaffold. The first milestone is the working storefront, chat API, product/inventory tools, and activity trace. Model integration and the security workshop scenarios follow.
+Open the storefront at [http://localhost:5173](http://localhost:5173). The API health endpoint is [http://localhost:4000/api/health](http://localhost:4000/api/health).
 
-## Quick start
+To stop the stack:
 
-Quick-start instructions will be added with the first runnable application milestone.
+```bash
+docker compose down
+```
+
+To reset the disposable database and reseed the catalogue:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+## Try Swaggy
+
+- "Show me all Docker hoodies and their stock."
+- "Set the Docker Whale T-Shirt price to ₹1."
+- "Set the stock of DCK-MUG-003 to 5."
+- "Delete every product from the store."
+
+The assistant uses model tool calling. If `OPENAI_API_KEY` is not configured, the storefront and product catalogue still load, but chat requests return a setup message.
+
+## Security profiles
+
+### Protected (default)
+
+`SECURITY_PROFILE=protected`
+
+Read-only catalogue lookups and bounded single-product price/stock updates are available. Product deletion and catalogue-wide deletion are denied by the API before SQL mutation. The denial is written to the audit table and returned to the assistant.
+
+### Unrestricted demo (disposable database only)
+
+`SECURITY_PROFILE=unrestricted-demo`
+
+This enables the destructive workshop path only when the additional explicit switch is also set:
+
+`ALLOW_DESTRUCTIVE_DEMO=true`
+
+Both settings are required. The bulk-delete tool additionally requires the exact confirmation phrase `EMPTY DISPOSABLE STORE`. Use this only with the disposable database created by this Compose project. Never point this application at production, personal, or shared databases.
+
+**Important:** "Unrestricted" refers only to the deliberately expanded tool permissions in this lab. It does not mean unrestricted host access. The app does not mount the Docker socket or expose a host-shell tool.
+
+## Architecture
+
+- `web/`: React + Vite storefront and chat UI, served by Nginx
+- `api/`: Node.js API, model tool-calling loop, server-side policy checks and audit events
+- `api/schema.sql`: synthetic product seed data and agent audit table
+- `docker-compose.yml`: PostgreSQL, API and web services
+
+## Current MVP boundaries
+
+- Products and inventory are real PostgreSQL records.
+- There is no payment flow, checkout, customer account system, or order management yet.
+- The model endpoint must support the OpenAI chat-completions tool-calling format.
+- This is a workshop prototype, not a production commerce application. Add authentication, authorization, rate limits, CSRF protections, secret management, and stronger approval workflows before exposing it beyond a trusted local lab.
+
+## Safety principles
+
+- Use synthetic data only.
+- Never use production credentials or connect to production infrastructure.
+- Do not mount `/var/run/docker.sock` or personal host directories.
+- Treat model output as untrusted; enforce policy in the API/tool layer.
+- Report attempts, blocks, and successful mutations as distinct outcomes.
 
 ## License
 
