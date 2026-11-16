@@ -29,3 +29,21 @@ jobs:
       - name: Build storefront
         working-directory: web
         run: npm run build
+      - name: Start the Compose stack
+        run: docker compose up -d --build
+      - name: Smoke-test API and sandbox health
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4000/api/health > /tmp/swaggy-health.json; then
+              break
+            fi
+            sleep 2
+          done
+          node -e "const h=require('/tmp/swaggy-health.json'); if (!h.ok || h.sandbox !== 'online') { console.error(h); process.exit(1); } console.log('API and sandbox are healthy');"
+      - name: Verify sandbox has no outbound internet
+        run: docker compose exec -T sandbox-worker node -e "fetch('https://example.com/', {signal: AbortSignal.timeout(2500)}).then(() => process.exit(1)).catch(() => process.exit(0))"
+      - name: Verify fixture mount is read-only
+        run: docker compose exec -T sandbox-worker node -e "import('node:fs/promises').then(({writeFile}) => writeFile('/workspace/README.md', 'tamper').then(() => process.exit(1)).catch(() => process.exit(0)))"
+      - name: Stop Compose stack
+        if: always()
+        run: docker compose down -v
