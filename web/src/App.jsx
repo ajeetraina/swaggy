@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const money = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
 const starters = [
@@ -54,6 +54,13 @@ export default function App() {
   const [page,setPage]=useState('store');
   const [error,setError]=useState('');
   const [widgetOpen,setWidgetOpen]=useState(false);
+  const chatRef=useRef(null);
+  const widgetRef=useRef(null);
+
+  // Keep both chat surfaces pinned to the newest message.
+  useEffect(()=>{
+    for(const el of [chatRef.current,widgetRef.current]) if(el) el.scrollTop=el.scrollHeight;
+  },[messages,busy,page,widgetOpen]);
 
   async function refresh() {
     try {
@@ -114,7 +121,7 @@ export default function App() {
       </>}
       {page==='assistant'&&<section className="workspace-page">{sectionTitle('YOUR AI STORE EMPLOYEE','Meet Swaggy.','One assistant. Real database tools. Independent runtime and server-side controls.') }
         <div className="assistant-layout"><aside className="assistant-side"><div className="profile-pill"><span className="dot green"/> SECURITY PROFILE: {profile.toUpperCase()}</div><h3>Try a scenario</h3>{starters.map(s=>promptButton(s,s.length>43?s.slice(0,40)+'…':s))}<p className="microcopy">Tool calls are limited to {config.tool_budget||8} per turn. Consequential catalogue changes require human approval.</p></aside>
-          <div className="chat-panel"><div className="chat-head"><div className="avatar">S</div><div><b>Swaggy</b><small>AI Store Assistant · {profile}</small></div><span className="online">● ONLINE</span></div><div className="chat-messages">{messages.map((m,i)=><div className={'message-row '+m.role} key={i}><div className="bubble">{m.content}{m.trace?.map((t,j)=><div className="trace-chip" key={j}><b>{t.tool}</b><span className={t.result?.blocked?'blocked':t.result?.pending_approval?'pending':t.result?.error?'blocked':'allowed'}>{t.result?.blocked?'BLOCKED':t.result?.pending_approval?'AWAITING APPROVAL':t.result?.error?'ERROR':'RESULT'}</span><pre>{JSON.stringify(t.result,null,2)}</pre></div>)}</div></div>)}{busy&&<div className="message-row assistant"><div className="bubble typing">Swaggy is thinking<span>•••</span></div></div>}</div><form className="chat-input" onSubmit={e=>{e.preventDefault();send();}}><input value={input} onChange={e=>setInput(e.target.value)} placeholder="Ask Swaggy to do something…"/><button disabled={busy||!input.trim()}>SEND ↗</button></form></div>
+          <div className="chat-panel"><div className="chat-head"><div className="avatar">S</div><div><b>Swaggy</b><small>AI Store Assistant · {profile}</small></div><span className="online">● ONLINE</span></div><div className="chat-messages" ref={chatRef}>{messages.map((m,i)=><div className={'message-row '+m.role} key={i}><div className="bubble">{m.content}{m.trace?.map((t,j)=><div className="trace-chip" key={j}><b>{t.tool}</b><span className={t.result?.blocked?'blocked':t.result?.pending_approval?'pending':t.result?.error?'blocked':'allowed'}>{t.result?.blocked?'BLOCKED':t.result?.pending_approval?'AWAITING APPROVAL':t.result?.error?'ERROR':'RESULT'}</span><pre>{JSON.stringify(t.result,null,2)}</pre></div>)}</div></div>)}{busy&&<div className="message-row assistant"><div className="bubble typing">Swaggy is thinking<span>•••</span></div></div>}</div><form className="chat-input" onSubmit={e=>{e.preventDefault();send();}}><input value={input} onChange={e=>setInput(e.target.value)} placeholder="Ask Swaggy to do something…"/><button disabled={busy||!input.trim()}>SEND ↗</button></form></div>
         </div>
       </section>}
       {page==='contain'&&<section className="workspace-page">{sectionTitle('C1 · CONTAIN','Give agents a boundary.','The worker can only see a small fixture directory and cannot initiate internet connections.')}
@@ -155,7 +162,7 @@ export default function App() {
           <div className="swaggy-widget-title"><b>Swaggy</b><small>AI store assistant · Ask me anything</small></div>
           <button className="swaggy-widget-close" onClick={()=>setWidgetOpen(false)} aria-label="Close chat">×</button>
         </div>
-        <div className="swaggy-widget-messages">
+        <div className="swaggy-widget-messages" ref={widgetRef}>
           {messages.map((m,i)=><div className={`swaggy-widget-message ${m.role}`} key={i}><div className="swaggy-widget-bubble">{m.content}{m.trace?.map((t,j)=><div className="trace-chip" key={j}><b>{t.tool}</b><span className={t.result?.blocked?'blocked':t.result?.pending_approval?'pending':t.result?.error?'blocked':'allowed'}>{t.result?.blocked?'BLOCKED':t.result?.pending_approval?'AWAITING APPROVAL':'RESULT'}</span></div>)}</div></div>)}
           {busy&&<div className="swaggy-widget-message assistant"><div className="swaggy-widget-bubble typing">Swaggy is thinking<span>•••</span></div></div>}
         </div>
