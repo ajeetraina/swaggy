@@ -2,48 +2,36 @@ name: Swaggy CI
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   pull_request:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Check API syntax
         run: node --check api/server.js
       - name: Check sandbox worker syntax
         run: node --check sandbox/server.js
-      - name: Check sandbox policy tests
+      - name: Test sandbox path policy
         run: node --test sandbox/*.test.js
-      - name: Validate Compose configuration
+      - name: Validate Compose
         run: docker compose config --quiet
-      - name: Install web dependencies
+      - name: Install frontend dependencies
         working-directory: web
         run: npm install
-      - name: Build all container images
+      - name: Build container images
         run: docker compose build
-      - name: Build storefront
+      - name: Build frontend
         working-directory: web
         run: npm run build
-      - name: Start the Compose stack
-        run: docker compose up -d --build
-      - name: Smoke-test API and sandbox health
-        run: |
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4000/api/health > /tmp/swaggy-health.json; then
-              break
-            fi
-            sleep 2
-          done
-          node -e "const h=require('/tmp/swaggy-health.json'); if (!h.ok || h.sandbox !== 'online') { console.error(h); process.exit(1); } console.log('API and sandbox are healthy');"
-      - name: Verify sandbox has no outbound internet
-        run: docker compose exec -T sandbox-worker node -e "fetch('https://example.com/', {signal: AbortSignal.timeout(2500)}).then(() => process.exit(1)).catch(() => process.exit(0))"
-      - name: Verify fixture mount is read-only
-        run: docker compose exec -T sandbox-worker node -e "import('node:fs/promises').then(({writeFile}) => writeFile('/workspace/README.md', 'tamper').then(() => process.exit(1)).catch(() => process.exit(0)))"
-      - name: Stop Compose stack
-        if: always()
-        run: docker compose down -v
+      - name: Run Compose smoke tests
+        run: bash scripts/compose-smoke.sh
