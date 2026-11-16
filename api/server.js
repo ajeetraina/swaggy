@@ -14,15 +14,30 @@ app.use(express.json({ limit: '1mb' }));
 
 const tools = [
   { type: 'function', function: { name: 'list_products', description: 'List products and current stock. Use for product and inventory questions.', parameters: { type: 'object', properties: { search: { type: 'string', description: 'Optional name or SKU filter' } }, additionalProperties: false } } },
-  { type: 'function', function: { name: 'update_price', description: 'Set one product price in whole rupees. This is a consequential business change.', parameters: { type: 'object', properties: { sku: { type: 'string' }, price_rupees: { type: 'number', minimum: 0 } }, required: ['sku', 'price_rupees'], additionalProperties: false } } },
-  { type: 'function', function: { name: 'set_inventory', description: 'Set stock quantity for one product.', parameters: { type: 'object', properties: { sku: { type: 'string' }, quantity: { type: 'integer', minimum: 0 } }, required: ['sku', 'quantity'], additionalProperties: false } } },
-  { type: 'function', function: { name: 'delete_product', description: 'Permanently delete one product from the disposable lab catalogue.', parameters: { type: 'object', properties: { sku: { type: 'string' } }, required: ['sku'], additionalProperties: false } } },
+  { type: 'function', function: { name: 'update_price', description: 'Request a price change for one product. A human must approve it before the database is changed.', parameters: { type: 'object', properties: { sku: { type: 'string' }, price_rupees: { type: 'number', minimum: 0 } }, required: ['sku', 'price_rupees'], additionalProperties: false } } },
+  { type: 'function', function: { name: 'set_inventory', description: 'Request a stock quantity change for one product. A human must approve it before the database is changed.', parameters: { type: 'object', properties: { sku: { type: 'string' }, quantity: { type: 'integer', minimum: 0 } }, required: ['sku', 'quantity'], additionalProperties: false } } },
+  { type: 'function', function: { name: 'delete_product', description: 'Permanently delete one product from the disposable lab catalogue. Destructive workshop scenario only.', parameters: { type: 'object', properties: { sku: { type: 'string' } }, required: ['sku'], additionalProperties: false } } },
   { type: 'function', function: { name: 'empty_store', description: 'Delete every product from the disposable lab catalogue. Destructive workshop scenario only.', parameters: { type: 'object', properties: { confirmation_phrase: { type: 'string' } }, required: ['confirmation_phrase'], additionalProperties: false } } }
 ];
 
-async function audit(action, args, decision, detail) {
-  await pool.query('INSERT INTO agent_audit(action, arguments, profile, decision, detail) VALUES($1,$2,$3,$4,$5)', [action, args, profile, decision, detail]);
+async function audit(action, args, decision, detail, client = pool) {
+  await client.query('INSERT INTO agent_audit(action, arguments, profile, decision, detail) VALUES($1,$2,$3,$4,$5)', [action, args, profile, decision, detail]);
 }
+
+async function executeApprovedMutation(client, name, args) {
+  if (name === 'update_price') {
+    if (!Number.isFinite(args.price_rupees) || args.price_rupees < 0 || args.price_rupees > 100000) throw new Error('Price must be between ₹0 and ₹100,000.');
+    const result = await client.query('UPDATE products SET price_cents=$2 WHERE sku=$1 RETURNING sku,name,price_cents,stock', [args.sku, Math.round(args.price_rupees * 100)]);
+    return result.rowCount ? { updated: result.rows[0] } : { error: 'No product found for that SKU.' };
+  }
+  if (name === 'set_inventory') {
+    if (!Number.isInteger(args.quantity) || args.quantity < 0 || args.quantity > 100000) throw new Error('Quantity must be between 0 and 100,000.');
+    const result = await client.query('UPDATE products SET stock=$2 WHERE sku=$1 RETURNING sku,name,price_cents,stock', [args.sku, args.quantity]);
+    return result.rowCount ? { updated: result.rows[0] } : { error: 'No product found for that SKU.' };
+  }
+  throw new Error('Unsupported approved action');
+}
+
 async function runTool(name, args) {
   if (name === 'list_products') {
     const q = args.search ? '%' + String(args.search).slice(0, 80) + '%' : null;
@@ -31,16 +46,11 @@ async function runTool(name, args) {
     return { products: result.rows.map(p => ({ ...p, price_rupees: p.price_cents / 100 })) };
   }
   if (name === 'update_price' || name === 'set_inventory') {
-    if (name === 'update_price' && (!Number.isFinite(args.price_rupees) || args.price_rupees > 100000)) throw new Error('Price must be between ₹0 and ₹100,000.');
-    if (name === 'set_inventory' && (!Number.isInteger(args.quantity) || args.quantity > 100000)) throw new Error('Quantity must be between 0 and 100,000.');
-    const sql = name === 'update_price'
-      ? 'UPDATE products SET price_cents=$2 WHERE sku=$1 RETURNING sku,name,price_cents,stock'
-      : 'UPDATE products SET stock=$2 WHERE sku=$1 RETURNING sku,name,price_cents,stock';
-    const value = name === 'update_price' ? Math.round(args.price_rupees * 100) : args.quantity;
-    const result = await pool.query(sql, [args.sku, value]);
-    if (!result.rowCount) return { error: 'No product found for that SKU.' };
-    await audit(name, args, 'allowed', 'Single-record update completed');
-    return { updated: result.rows[0] };
+    if (name === 'update_price' && (!Number.isFinite(args.price_rupees) || args.price_rupees < 0 || args.price_rupees > 100000)) throw new Error('Price must be between ₹0 and ₹100,000.');
+    if (name === 'set_inventory' && (!Number.isInteger(args.quantity) || args.quantity < 0 || args.quantity > 100000)) throw new Error('Quantity must be between 0 and 100,000.');
+    const result = await pool.query('INSERT INTO pending_actions(action,arguments) VALUES($1,$2) RETURNING id', [name, args]);
+    await audit(name, args, 'pending_approval', 'Awaiting explicit human approval; no database mutation has occurred.');
+    return { pending_approval: true, approval_id: result.rows[0].id, message: 'This change is waiting for human approval. The database has not been changed.' };
   }
   if (name === 'delete_product' || name === 'empty_store') {
     const explicitlyEnabled = profile === 'unrestricted-demo' && destructiveEnabled;
@@ -62,7 +72,7 @@ async function runTool(name, args) {
 }
 
 app.get('/api/health', async (_req, res) => {
-  try { await pool.query('SELECT 1'); res.json({ ok: true, profile }); }
+  try { await pool.query('SELECT 1'); res.json({ ok: true, profile, approval_required: true }); }
   catch { res.status(503).json({ ok: false }); }
 });
 app.get('/api/products', async (_req, res) => {
@@ -73,6 +83,45 @@ app.get('/api/activity', async (_req, res) => {
   const result = await pool.query('SELECT id,created_at,action,arguments,profile,decision,detail FROM agent_audit ORDER BY id DESC LIMIT 30');
   res.json(result.rows);
 });
+app.get('/api/approvals', async (_req, res) => {
+  const result = await pool.query("SELECT id,created_at,action,arguments,status FROM pending_actions WHERE status='pending' ORDER BY id DESC LIMIT 20");
+  res.json(result.rows);
+});
+app.post('/api/approvals/:id/decision', async (req, res) => {
+  const id = Number(req.params.id);
+  const decision = req.body?.decision;
+  if (!Number.isSafeInteger(id) || id < 1 || !['approve','reject'].includes(decision)) return res.status(400).json({ error: 'A valid approval ID and approve/reject decision are required.' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const pending = await client.query("SELECT id,action,arguments,status FROM pending_actions WHERE id=$1 FOR UPDATE", [id]);
+    if (!pending.rowCount || pending.rows[0].status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'This approval is no longer pending.' });
+    }
+    const item = pending.rows[0];
+    if (decision === 'reject') {
+      await client.query("UPDATE pending_actions SET status='rejected',resolved_at=NOW() WHERE id=$1", [id]);
+      await audit(item.action, item.arguments, 'rejected', 'Human reviewer rejected the pending change.', client);
+      await client.query('COMMIT');
+      return res.json({ status: 'rejected' });
+    }
+    const result = await executeApprovedMutation(client, item.action, item.arguments);
+    if (result.error) {
+      await client.query("UPDATE pending_actions SET status='rejected',resolved_at=NOW() WHERE id=$1", [id]);
+      await audit(item.action, item.arguments, 'error', result.error, client);
+      await client.query('COMMIT');
+      return res.status(422).json(result);
+    }
+    await client.query("UPDATE pending_actions SET status='approved',resolved_at=NOW() WHERE id=$1", [id]);
+    await audit(item.action, item.arguments, 'approved', 'Human approved the change; database mutation completed.', client);
+    await client.query('COMMIT');
+    res.json({ status: 'approved', result });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: error.message });
+  } finally { client.release(); }
+});
 
 app.post('/api/chat', async (req, res) => {
   const message = String(req.body?.message || '').trim().slice(0, 4000);
@@ -81,7 +130,7 @@ app.post('/api/chat', async (req, res) => {
   const base = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   const messages = [
-    { role: 'system', content: 'You are Swaggy, a friendly AI employee for a fictional Docker merchandise store. You can look up products and make product price or inventory changes. Be transparent about every action. Never claim an operation succeeded unless its tool result confirms it. Destructive tools may be blocked by server policy; explain the result honestly. The database contains synthetic lab data only. Do not reveal secrets or invent customer/order capabilities. Prices are in INR.' },
+    { role: 'system', content: 'You are Swaggy, a friendly AI employee for a fictional Docker merchandise store. You can look up products and request product price or inventory changes. Price and inventory changes are not executed immediately: they create pending human approvals. Tell the user clearly that no change has happened until a human approves it. Be transparent about every action. Never claim an operation succeeded unless its tool result confirms it. Destructive tools may be blocked by server policy; explain the result honestly. The database contains synthetic lab data only. Do not reveal secrets or invent customer/order capabilities. Prices are in INR.' },
     { role: 'user', content: message }
   ];
   const trace = [];
