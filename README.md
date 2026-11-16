@@ -15,45 +15,85 @@ Swaggy is a disposable AI-powered Docker merchandise store. Its assistant can re
 - Isolated sandbox worker with a read-only fixture mount, dropped Linux capabilities, read-only root filesystem and no outbound internet route
 - Docker Compose stack with no host Docker socket mount
 
-## Run locally
+## Run in a Docker Sandbox (recommended)
 
-Requirements: Docker Desktop (or Docker Engine) with Compose.
+Swaggy is a security workshop, so the whole stack runs *inside* an isolated
+[Docker Sandbox](https://docs.docker.com/ai/sandboxes/) microVM — its own Docker
+daemon, filesystem and network — rather than on your host Docker daemon. This is
+the "Contain" principle in practice: nothing Swaggy builds or runs can touch the
+host.
+
+Requirements: `sbx` 0.39.0 or later, signed in (`sbx login`). Install with
+`brew install docker/tap/sbx` (macOS) — Docker Desktop is not required.
+
+### Start the sandbox and application
+
+From the repository root on your host:
 
 ```bash
 git clone https://github.com/ajeetraina/swaggy.git
 cd swaggy
-cp .env.example .env
+sbx run --clone claude .
 ```
 
-Add your model API key to `.env`:
+`--clone` gives the sandbox a private clone of this Git repository, so your host
+working tree is never mounted or modified. You land in the agent session inside
+the sandbox.
 
-```dotenv
-OPENAI_API_KEY=your_api_key
-OPENAI_MODEL=gpt-4o-mini
-SECURITY_PROFILE=protected
-ALLOW_DESTRUCTIVE_DEMO=false
-```
-
-Start the application:
+Then, inside the sandbox, bring up the stack with Compose:
 
 ```bash
-docker compose up --build
+cp .env.example .env            # then add your OPENAI_API_KEY
+docker compose up -d --build
+docker compose ps
+curl -fsS http://localhost:4000/api/health
 ```
 
-Open the storefront at [http://localhost:5173](http://localhost:5173). The API health endpoint is [http://localhost:4000/api/health](http://localhost:4000/api/health).
+### Reach the storefront from your host
 
-To stop the stack:
+Ports are not exposed automatically. From your host, publish the sandbox's
+storefront and API ports (find the sandbox name with `sbx ls` — it defaults to
+`claude-swaggy`):
 
 ```bash
-docker compose down
+sbx port publish claude-swaggy 5173:5173 4000:4000
 ```
 
-To reset the disposable database and reseed the catalogue:
+Now open the storefront at [http://localhost:5173](http://localhost:5173). The
+API health endpoint is
+[http://localhost:4000/api/health](http://localhost:4000/api/health).
+
+> Declarative alternative: [`sbxenv.yaml`](sbxenv.yaml) describes the same
+> environment and its port forwards. Run `sbx env run --clone` instead, and
+> `sbx` provisions the sandbox and publishes ports `5173`/`4000` for you.
+
+To reset the disposable database and reseed the catalogue, inside the sandbox:
 
 ```bash
 docker compose down -v
+docker compose up -d --build
+```
+
+Tear the whole sandbox down from the host when you are done:
+
+```bash
+sbx rm claude-swaggy
+```
+
+## Run directly with Docker Compose (fallback)
+
+If you cannot use Docker Sandboxes, you can still run the stack directly on a
+host with Docker Desktop (or Docker Engine) and Compose:
+
+```bash
+cp .env.example .env     # then add your OPENAI_API_KEY
+# set BIND_HOST=127.0.0.1 in .env to keep the ports on loopback only
 docker compose up --build
 ```
+
+This runs on your host Docker daemon and does not provide the microVM isolation
+the workshop demonstrates. Stop with `docker compose down` (add `-v` to reset
+the database).
 
 ## Try Swaggy
 
@@ -126,13 +166,14 @@ Both settings are required. The bulk-delete tool additionally requires the exact
 - `api/schema.sql`: synthetic product seed data and agent audit table
 - `sandbox/`: isolated worker and public fixture files
 - `docker-compose.yml`: PostgreSQL, API, sandbox worker and web services
+- `sbxenv.yaml`: Docker Sandbox environment — clones the repo into an isolated microVM and forwards the storefront/API ports to the host
 
 ## Current MVP boundaries
 
 - Products and inventory are real PostgreSQL records.
 - There is no payment flow, checkout, customer account system, or order management yet.
 - The model endpoint must support the OpenAI chat-completions tool-calling format.
-- The approval endpoints are unauthenticated and intended only for a local trusted lab. Compose binds published ports to 127.0.0.1; do not expose them through a public reverse proxy or shared network.
+- The approval endpoints are unauthenticated and intended only for a local trusted lab. In the recommended Docker Sandbox flow the stack is isolated inside a microVM and only the forwarded ports reach your host. If you run Compose directly on a host instead, set `BIND_HOST=127.0.0.1` to keep published ports on loopback; do not expose them through a public reverse proxy or shared network.
 - This is a workshop prototype, not a production commerce application. Add authentication, authorization, rate limits, CSRF protections, secret management, and stronger approval workflows before exposing it beyond a trusted local lab.
 
 ## Safety principles

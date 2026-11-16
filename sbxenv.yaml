@@ -1,0 +1,26 @@
+# Docker Sandbox environment for Swaggy (declarative alternative).
+#
+# The primary flow in README.md is `sbx run --clone claude .`, which clones the
+# repo into an isolated microVM; you then publish ports from the host with
+# `sbx port publish`.
+#
+# This file describes the same environment declaratively. `sbx env run --clone`
+# reads it, creates the sandbox with its own Docker daemon, clones this Git
+# repository *inside* the sandbox, and forwards the storefront and API ports
+# back to the host automatically. Either way the whole Swaggy stack is built and
+# run with `docker compose` inside the sandbox, so nothing touches the host
+# Docker daemon and the host working tree is never mounted.
+schemaVersion: "1"
+agent: claude
+
+# A workspace path is required so `--clone` has a repository to clone from.
+# With `--clone` the host tree is not bind-mounted; the sandbox works on its
+# own private clone.
+workspace: .
+
+# Forward the stack's published ports out to the host.
+ports:
+  - sandbox: 5173   # storefront (web)
+    host: 5173
+  - sandbox: 4000   # API
+    host: 4000

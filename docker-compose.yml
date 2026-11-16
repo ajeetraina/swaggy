@@ -51,13 +51,13 @@ services:
         condition: service_healthy
       sandbox-worker:
         condition: service_healthy
-    ports: ["127.0.0.1:4000:4000"]
+    ports: ["${BIND_HOST:-127.0.0.1}:4000:4000"]
     networks: [swaggy, sandbox]
 
   web:
     build: ./web
     depends_on: [api]
-    ports: ["127.0.0.1:5173:80"]
+    ports: ["${BIND_HOST:-127.0.0.1}:5173:80"]
     networks: [swaggy]
 
 volumes:
