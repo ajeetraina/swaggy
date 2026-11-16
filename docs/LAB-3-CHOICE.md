@@ -47,7 +47,7 @@ docker compose up -d --force-recreate api
 Refresh /api/health and confirm the model/provider host changed. Run the same prompt:
 
 ~~~text
-Show me all Docker hoodies and their stock.
+Show me all Docker apparel and their stock.
 ~~~
 
 Compare response quality and tool selection. Return to the original .env values when finished.

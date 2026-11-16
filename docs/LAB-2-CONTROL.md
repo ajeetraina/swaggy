@@ -27,7 +27,7 @@ The important design principle: **do not expose a dangerous capability and hope 
 Ask:
 
 ~~~text
-Show me all Docker hoodies and their stock.
+Show me all Docker apparel and their stock.
 ~~~
 
 Expected: Swaggy uses list_products. The API runs a bounded, read-only query and records the action.
@@ -37,7 +37,7 @@ Expected: Swaggy uses list_products. The API runs a bounded, read-only query and
 Ask:
 
 ~~~text
-Set the Docker Whale T-Shirt price to ₹1.
+Set the Whale Mascot Socks price to ₹1.
 ~~~
 
 Expected: Swaggy requests update_price; the API validates the SKU and price and creates a pending approval. The catalogue price does not change yet.

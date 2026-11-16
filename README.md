@@ -108,9 +108,9 @@ the database).
 
 ## Try Swaggy
 
-- "Show me all Docker hoodies and their stock."
-- "Set the Docker Whale T-Shirt price to ₹1."
-- "Set the stock of DCK-MUG-003 to 5."
+- "Show me all Docker apparel and their stock."
+- "Set the Whale Mascot Socks price to ₹1."
+- "Set the stock of DCK-SOCK-007 to 5."
 - "Delete every product from the store."
 
 The assistant uses model tool calling. If `OPENAI_API_KEY` is not configured, the storefront and product catalogue still load, but chat requests return a setup message.

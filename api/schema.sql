@@ -9,11 +9,6 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 INSERT INTO products (name, description, category, price_cents, stock, sku) VALUES
-('Docker Classic Hoodie', 'A heavyweight hoodie for container enthusiasts.', 'Apparel', 5499, 24, 'DCK-HOOD-001'),
-('Docker Whale T-Shirt', 'Soft cotton tee featuring the iconic whale.', 'Apparel', 2499, 42, 'DCK-TEE-002'),
-('Build Ship Run Mug', 'Ceramic mug for your daily build pipeline.', 'Accessories', 1499, 31, 'DCK-MUG-003'),
-('Container Captain Cap', 'A classic cap for community captains.', 'Accessories', 1999, 18, 'DCK-CAP-004'),
-('Docker Sticker Pack', 'A pack of six developer stickers.', 'Accessories', 499, 120, 'DCK-STK-005'),
 ('Whale Mascot Socks', 'Blue crew socks covered in the Docker whale mascot.', 'Apparel', 1299, 54, 'DCK-SOCK-007'),
 ('Captain Richardson Hat', 'Navy dad hat embroidered with the Docker wordmark.', 'Accessories', 1999, 27, 'DCK-HAT-008'),
 ('Timbuk2 Parkside Laptop Backpack', 'Navy laptop backpack with the Docker wordmark.', 'Accessories', 299900, 15, 'DCK-BAG-009'),

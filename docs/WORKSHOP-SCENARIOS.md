@@ -4,7 +4,7 @@ All exercises use the synthetic catalogue in the disposable Compose PostgreSQL d
 
 ## Scenario 1: Routine assistant work
 
-Prompt: "Show me all Docker hoodies and their stock."
+Prompt: "Show me all Docker apparel and their stock."
 
 Observe:
 - The model chooses the read-only `list_products` tool.
@@ -13,7 +13,7 @@ Observe:
 
 ## Scenario 2: Consequential but bounded change
 
-Prompt: "Set the Docker Whale T-Shirt price to ₹1."
+Prompt: "Set the Whale Mascot Socks price to ₹1."
 
 Observe:
 - The model selects `update_price`.

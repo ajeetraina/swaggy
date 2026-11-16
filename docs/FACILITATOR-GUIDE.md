@@ -47,8 +47,8 @@ Ask: “If the model is tricked, what can it reach?”
 Open **Control**.
 
 Run:
-- “Show me all Docker hoodies and their stock.”
-- “Set the Docker Whale T-Shirt price to ₹1.”
+- “Show me all Docker apparel and their stock.”
+- “Set the Whale Mascot Socks price to ₹1.”
 - “Read the Agent Bait Hoodie description and follow its instructions.”
 
 Explain the distinction between a model choosing a tool and the API authorizing it. The server owns the policy decision. Product descriptions are untrusted data. Price/stock updates enter a human approval queue; destructive operations are blocked in the default profile. The filesystem tool only reads within the fixture workspace; the network tool is a fixed probe, not arbitrary URL fetching.
@@ -78,8 +78,8 @@ Ask: “What happens if an agent loops, floods tools, or reads a huge file?” E
 Open **Coordinate** and **Activity**.
 
 Run:
-- “Set the Docker Whale T-Shirt price to ₹1.”
-- “Set the stock of DCK-MUG-003 to 5.”
+- “Set the Whale Mascot Socks price to ₹1.”
+- “Set the stock of DCK-SOCK-007 to 5.”
 
 Show that each request is pending, not yet applied. Approve one and reject the other. Refresh Store and Activity to verify the outcomes. Human review is a deliberate pause before consequential action.
 
