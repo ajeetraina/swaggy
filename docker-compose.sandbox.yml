@@ -1,0 +1,31 @@
+# Overrides for running Swaggy inside a Docker Sandbox (sbx).
+#
+# In a sandbox, all outbound HTTP/HTTPS egress flows through the sbx proxy
+# (gateway.docker.internal:3128). For a stored OpenAI credential
+# (`sbx secret set -g openai` on the host) the proxy rewrites the Authorization
+# header on requests to api.openai.com with the real key — so the key never
+# enters the sandbox, is never typed into an editor, and never lands in .env or
+# shell history.
+#
+# For that injection to happen the api container must (a) route fetch through
+# the proxy and (b) trust the proxy's TLS CA. Node's global fetch ignores
+# *_PROXY env vars unless NODE_USE_ENV_PROXY=1 is set.
+#
+# Use inside the sandbox:
+#   docker compose -f docker-compose.yml -f docker-compose.sandbox.yml up -d --build
+services:
+  api:
+    environment:
+      # Route Node's global fetch through the sbx egress proxy.
+      NODE_USE_ENV_PROXY: "1"
+      HTTP_PROXY: http://gateway.docker.internal:3128
+      HTTPS_PROXY: http://gateway.docker.internal:3128
+      # Internal service traffic must stay off the proxy.
+      NO_PROXY: localhost,127.0.0.1,::1,db,sandbox-worker,gateway.docker.internal
+      # Trust the proxy's MITM CA so the rewritten TLS to OpenAI is accepted.
+      NODE_EXTRA_CA_CERTS: /etc/ssl/proxy-ca.crt
+      # Any non-empty value satisfies the api's key check; the proxy replaces it
+      # with the real credential it holds for api.openai.com.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-sbx-proxy-injected-credential}
+    volumes:
+      - /usr/local/share/ca-certificates/proxy-ca.crt:/etc/ssl/proxy-ca.crt:ro

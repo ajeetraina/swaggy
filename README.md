@@ -33,6 +33,7 @@ From the repository root on your host:
 ```bash
 git clone https://github.com/ajeetraina/swaggy.git
 cd swaggy
+sbx secret set -g openai        # store your OpenAI key on the host, once
 sbx run --clone claude .
 ```
 
@@ -40,11 +41,21 @@ sbx run --clone claude .
 working tree is never mounted or modified. You land in the agent session inside
 the sandbox.
 
-Then, inside the sandbox, bring up the stack with Compose:
+`sbx secret set -g openai` keeps your OpenAI key in the host OS keychain. The key
+is **never** copied into the sandbox: all sandbox egress flows through the `sbx`
+proxy, which injects the real credential into requests bound for
+`api.openai.com`. This is the "Contain" principle applied to secrets — you never
+edit `.env` or paste a key inside the microVM (handy, since the minimal sandbox
+image ships no text editor), and the key never lands on the sandbox filesystem
+or in shell history.
+
+Then, inside the sandbox, bring up the stack with Compose. Use the sandbox
+override so the API routes through the proxy and trusts its TLS CA — leave
+`OPENAI_API_KEY` empty in `.env`; the proxy supplies the real key:
 
 ```bash
-cp .env.example .env            # then add your OPENAI_API_KEY
-docker compose up -d --build
+cp .env.example .env            # leave OPENAI_API_KEY empty — the sbx proxy injects it
+docker compose -f docker-compose.yml -f docker-compose.sandbox.yml up -d --build
 docker compose ps
 curl -fsS http://localhost:4000/api/health
 ```
@@ -70,8 +81,8 @@ API health endpoint is
 To reset the disposable database and reseed the catalogue, inside the sandbox:
 
 ```bash
-docker compose down -v
-docker compose up -d --build
+docker compose -f docker-compose.yml -f docker-compose.sandbox.yml down -v
+docker compose -f docker-compose.yml -f docker-compose.sandbox.yml up -d --build
 ```
 
 Tear the whole sandbox down from the host when you are done:
