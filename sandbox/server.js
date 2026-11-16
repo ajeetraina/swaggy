@@ -1,5 +1,5 @@
 import http from 'node:http';
-import path from 'node:path';
+import { resolveWorkspacePath, isWithinWorkspace } from './policy.js';
 import { realpath, stat, readFile } from 'node:fs/promises';
 
 const PORT = Number(process.env.PORT || 4100);
@@ -20,13 +20,15 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url.pathname === '/v1/files') {
     const requested = url.searchParams.get('path') || '';
-    const candidate = path.resolve(ROOT, requested);
-    if (candidate !== ROOT && !candidate.startsWith(ROOT + path.sep)) {
+    let candidate;
+    try { candidate = resolveWorkspacePath(ROOT, requested); }
+    catch { return send(res, 403, { blocked: true, reason: 'Path is outside the mounted workspace.' }); }
+    if (!isWithinWorkspace(ROOT, candidate)) {
       return send(res, 403, { blocked: true, reason: 'Path is outside the mounted workspace.' });
     }
     try {
       const resolved = await realpath(candidate);
-      if (resolved !== ROOT && !resolved.startsWith(ROOT + path.sep)) {
+      if (!isWithinWorkspace(ROOT, resolved)) {
         return send(res, 403, { blocked: true, reason: 'Resolved path is outside the mounted workspace.' });
       }
       const info = await stat(resolved);
