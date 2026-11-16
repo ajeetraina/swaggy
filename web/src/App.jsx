@@ -32,6 +32,7 @@ export default function App() {
   const [config,setConfig]=useState({});
   const [page,setPage]=useState('store');
   const [error,setError]=useState('');
+  const [widgetOpen,setWidgetOpen]=useState(false);
 
   async function refresh() {
     try {
@@ -119,6 +120,27 @@ export default function App() {
         <div className="activity-table"><div className="activity-row activity-label"><span>TIME</span><span>TOOL / ACTION</span><span>POLICY</span><span>DETAIL</span></div>{activity.length?activity.map(a=><div className="activity-row" key={a.id}><span>{new Date(a.created_at).toLocaleTimeString()}</span><b>{a.action}</b><span className={['blocked','rejected'].includes(a.decision)?'blocked':a.decision==='pending_approval'?'pending':'allowed'}>{a.decision.toUpperCase()}</span><span>{a.detail}</span></div>):<div className="empty-state">No agent actions yet. Start a conversation with Swaggy.</div>}</div>
       </section>}
     </main>
+    <section className={`swaggy-widget ${widgetOpen?'is-open':''}`} aria-label="Swaggy chat assistant">
+      {widgetOpen&&<div className="swaggy-widget-panel" role="dialog" aria-label="Chat with Swaggy">
+        <div className="swaggy-widget-head">
+          <div className="swaggy-widget-avatar">🐳</div>
+          <div className="swaggy-widget-title"><b>Swaggy</b><small>AI store assistant · Ask me anything</small></div>
+          <button className="swaggy-widget-close" onClick={()=>setWidgetOpen(false)} aria-label="Close chat">×</button>
+        </div>
+        <div className="swaggy-widget-messages">
+          {messages.map((m,i)=><div className={`swaggy-widget-message ${m.role}`} key={i}><div className="swaggy-widget-bubble">{m.content}{m.trace?.map((t,j)=><div className="trace-chip" key={j}><b>{t.tool}</b><span className={t.result?.blocked?'blocked':t.result?.pending_approval?'pending':t.result?.error?'blocked':'allowed'}>{t.result?.blocked?'BLOCKED':t.result?.pending_approval?'AWAITING APPROVAL':'RESULT'}</span></div>)}</div></div>)}
+          {busy&&<div className="swaggy-widget-message assistant"><div className="swaggy-widget-bubble typing">Swaggy is thinking<span>•••</span></div></div>}
+        </div>
+        <form className="swaggy-widget-input" onSubmit={e=>{e.preventDefault();send();}}>
+          <input value={input} onChange={e=>setInput(e.target.value)} placeholder="Ask Swaggy…" aria-label="Message Swaggy"/>
+          <button disabled={busy||!input.trim()} aria-label="Send message">↑</button>
+        </form>
+        <div className="swaggy-widget-foot">Product help · Store questions · 5Cs security labs</div>
+      </div>}
+      <button className="swaggy-widget-launcher" onClick={()=>setWidgetOpen(v=>!v)} aria-label={widgetOpen?'Close Swaggy chat':'Open Swaggy chat'} aria-expanded={widgetOpen}>
+        {widgetOpen?<span className="swaggy-launcher-close">×</span>:<><span className="swaggy-launcher-whale">🐳</span><span className="swaggy-launcher-label">Chat with Swaggy</span></>}
+      </button>
+    </section>
     <footer><b>SWAGGY</b><span>5Cs for safer AI agents</span><span>CONTAIN · CONTROL · CHOICE · CAPACITY · COORDINATE</span></footer>
     {error&&<div className="toast" role="alert">{error}<button onClick={()=>setError('')}>×</button></div>}
   </div>;
