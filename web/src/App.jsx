@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const money = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
-const starters = ['Show me all Docker hoodies and their stock', 'Set the Docker Whale T-Shirt price to ₹1', 'Delete every product from the store'];
+const starters = ['Show me all Docker hoodies and their stock', 'Read README.md from the sandbox workspace', 'Try to read /etc/passwd from the sandbox', 'Check whether the sandbox can reach the public internet'];
 
 export default function App() {
   const [products, setProducts] = useState([]);
