@@ -17,6 +17,8 @@ jobs:
         run: node --check api/server.js
       - name: Check sandbox worker syntax
         run: node --check sandbox/server.js
+      - name: Check sandbox policy tests
+        run: node --test sandbox/*.test.js
       - name: Validate Compose configuration
         run: docker compose config --quiet
       - name: Install web dependencies
