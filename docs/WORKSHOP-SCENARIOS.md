@@ -81,6 +81,14 @@ Observe:
 
 The probe sends no catalogue or user data. This is a Docker Compose network-isolation exercise, not a claim that every Docker Sandbox policy is configured this way.
 
+## The five Cs
+
+- **Contain:** isolate the worker's filesystem and network.
+- **Control:** enforce tool and data policies at the API and worker boundaries.
+- **Choice:** select a compatible model/provider and expose only deliberate tools.
+- **Capacity:** constrain CPU, memory, processes, input, file reads and tool calls.
+- **Coordinate:** route consequential changes through human review and retain an audit trail.
+
 ## Scenario 7: Explicit destructive lab
 
 Only on a disposable local lab database, change both settings in `.env`:
