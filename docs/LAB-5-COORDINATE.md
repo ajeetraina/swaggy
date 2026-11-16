@@ -11,7 +11,7 @@ Some actions are too consequential to execute immediately based only on a model-
 In Assistant, ask:
 
 ~~~text
-Set the Docker Whale T-Shirt price to ₹1.
+Set the Whale Mascot Socks price to ₹1.
 ~~~
 
 Expected:
@@ -37,7 +37,7 @@ Expected:
 Ask:
 
 ~~~text
-Set the stock of DCK-MUG-003 to 5.
+Set the stock of DCK-SOCK-007 to 5.
 ~~~
 
 Reject it in Coordinate.
