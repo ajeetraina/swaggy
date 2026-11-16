@@ -17,10 +17,12 @@ Prompt: "Set the Docker Whale T-Shirt price to ₹1."
 
 Observe:
 - The model selects `update_price`.
-- The API validates the value and SKU.
-- The single-product update is recorded.
+- The API validates the value and SKU, then creates a pending approval record.
+- The product price remains unchanged while the request is pending.
+- A human explicitly approves or rejects the request in the Approval Queue.
+- Only an approval triggers the database update; both decisions appear in the audit log.
 
-Discussion: a production-grade protected profile should add identity-aware authorization and explicit human approval for financial changes. This MVP demonstrates server-side tool boundaries and audit evidence, not a complete approval workflow.
+Discussion: this is a local workshop approval flow, not production identity-aware authorization. Add authenticated reviewer identity, role-based authorization, and stronger separation of duties before any shared deployment.
 
 ## Scenario 3: Destructive request in protected mode
 
