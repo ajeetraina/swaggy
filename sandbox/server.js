@@ -1,4 +1,5 @@
 import http from 'node:http';
+import path from 'node:path';
 import { resolveWorkspacePath, isWithinWorkspace } from './policy.js';
 import { realpath, stat, readFile } from 'node:fs/promises';
 
