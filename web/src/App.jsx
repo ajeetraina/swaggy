@@ -15,23 +15,11 @@ const csPages = [
   ['capacity','Capacity','C4'],['coordinate','Coordinate','C5']
 ];
 
-// Swaggy — a friendly AI agent. Head/accents use currentColor so the mark
-// themes to its surroundings; eyes stay light for contrast on any background.
-function AgentLogo({className='',size=30}) {
-  return <svg className={className} width={size} height={size} viewBox="0 0 48 48" fill="none" role="img" aria-label="Swaggy agent">
-    <path d="M24 10V6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"/>
-    <circle cx="24" cy="4.4" r="2.6" fill="currentColor"/>
-    <rect x="3.5" y="21.5" width="5" height="9" rx="2.5" fill="currentColor"/>
-    <rect x="39.5" y="21.5" width="5" height="9" rx="2.5" fill="currentColor"/>
-    <rect x="8.5" y="11" width="31" height="28" rx="8.5" fill="currentColor"/>
-    <rect x="15" y="20" width="7.5" height="6.5" rx="3.25" fill="#fff"/>
-    <rect x="25.5" y="20" width="7.5" height="6.5" rx="3.25" fill="#fff"/>
-    <rect x="19" y="31" width="10" height="2.6" rx="1.3" fill="#ffffffb3"/>
-    <g fill="currentColor" opacity=".5">
-      <path d="M4.5 34.7 6.8 37 4.5 39.3 2.2 37Z"/>
-      <path d="M43.5 34.7 45.8 37 43.5 39.3 41.2 37Z"/>
-      <path d="M24 43.2 26.3 45.5 24 47.8 21.7 45.5Z"/>
-    </g>
+// Official Docker (Moby) brand mark, from the Simple Icons set. Single path,
+// so it themes to its surroundings via currentColor.
+function DockerLogo({className='',size=30}) {
+  return <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Docker">
+    <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/>
   </svg>;
 }
 
@@ -126,19 +114,19 @@ export default function App() {
 
   return <div className="app-shell">
     <header className="topbar">
-      <a className="brand" href="#store" onClick={()=>setPage('store')}><AgentLogo className="brand-logo" size={30}/> SWAGGY</a>
+      <a className="brand" href="#store" onClick={()=>setPage('store')}><DockerLogo className="brand-logo" size={30}/> SWAGGY</a>
       <nav className="top-nav">{topPages.map(([id,label])=><button key={id} className={page===id?'active':''} onClick={()=>setPage(id)}>{label}</button>)}</nav>
       <span className="status"><i/> LAB ENVIRONMENT</span>
     </header>
     <div className="shell-body">
     <aside className="cs-sidebar">
-      <div className="cs-sidebar-head"><AgentLogo size={26}/><div><b>5Cs</b><small>Agent Safety</small></div></div>
+      <div className="cs-sidebar-head"><DockerLogo size={26}/><div><b>5Cs</b><small>Agent Safety</small></div></div>
       <nav className="cs-nav">{csPages.map(([id,label,num])=><button key={id} className={page===id?'active':''} onClick={()=>setPage(id)}><span className="cs-num">{num}</span><span>{label}</span></button>)}</nav>
       <p className="cs-sidebar-note">Five independent controls that keep an AI agent safe — each with a live lab.</p>
     </aside>
     <main>
       {page==='store'&&<>
-        <section className="hero"><div className="eyebrow">THE DEVELOPER MERCH STORE · POWERED BY AI</div><h1>Build. Ship.<br/><em>Wear.</em></h1><p>A real store database behind an AI employee. Explore the merchandise, then explore what happens when an agent gets permissions.</p><button className="primary-btn" onClick={()=>setPage('assistant')}>Meet Swaggy <span aria-hidden="true">↓</span></button><div className="hero-stamp"><AgentLogo className="stamp-logo" size={40}/><b>5Cs</b><span>AGENT SAFETY</span></div></section>
+        <section className="hero"><div className="eyebrow">THE DEVELOPER MERCH STORE · POWERED BY AI</div><h1>Build. Ship.<br/><em>Wear.</em></h1><p>A real store database behind an AI employee. Explore the merchandise, then explore what happens when an agent gets permissions.</p><button className="primary-btn" onClick={()=>setPage('assistant')}>Meet Swaggy <span aria-hidden="true">↓</span></button><div className="hero-stamp"><DockerLogo className="stamp-logo" size={40}/><b>5Cs</b><span>AGENT SAFETY</span></div></section>
         <section className="store-section"><div className="section-heading"><div><div className="eyebrow">THE COLLECTION</div><h2>Made for builders.</h2></div><span className="count">{products.length} PRODUCTS</span></div>
           <div className="product-grid">{products.map((p,i)=><article className="product-card" key={p.sku}><ProductArt sku={p.sku} icon={artFor(p)} bg={'art-'+(i%5)} label={`${p.category||'SWAG'} / ${String(i+1).padStart(2,'0')}`}/><div className="product-meta"><div><h3>{p.name}</h3><p>{p.description}</p></div><strong>{money(p.price_rupees)}</strong></div><div className="stock-line"><span>{p.sku}</span><span>{p.stock} in stock</span></div></article>)}</div>
         </section>
@@ -182,7 +170,7 @@ export default function App() {
     <section className={`swaggy-widget ${widgetOpen?'is-open':''}`} aria-label="Swaggy chat assistant">
       {widgetOpen&&<div className="swaggy-widget-panel" role="dialog" aria-label="Chat with Swaggy">
         <div className="swaggy-widget-head">
-          <div className="swaggy-widget-avatar"><AgentLogo size={24}/></div>
+          <div className="swaggy-widget-avatar"><DockerLogo size={24}/></div>
           <div className="swaggy-widget-title"><b>Swaggy</b><small>AI store assistant · Ask me anything</small></div>
           <button className="swaggy-widget-close" onClick={()=>setWidgetOpen(false)} aria-label="Close chat">×</button>
         </div>
@@ -197,7 +185,7 @@ export default function App() {
         <div className="swaggy-widget-foot">Product help · Store questions · 5Cs security labs</div>
       </div>}
       <button className="swaggy-widget-launcher" onClick={()=>setWidgetOpen(v=>!v)} aria-label={widgetOpen?'Close Swaggy chat':'Open Swaggy chat'} aria-expanded={widgetOpen}>
-        {widgetOpen?<span className="swaggy-launcher-close">×</span>:<><span className="swaggy-launcher-whale"><AgentLogo size={26}/></span><span className="swaggy-launcher-label">Chat with Swaggy</span></>}
+        {widgetOpen?<span className="swaggy-launcher-close">×</span>:<><span className="swaggy-launcher-whale"><DockerLogo size={26}/></span><span className="swaggy-launcher-label">Chat with Swaggy</span></>}
       </button>
     </section>
     <footer><b>SWAGGY</b><span>5Cs for safer AI agents</span><span>CONTAIN · CONTROL · CHOICE · CAPACITY · COORDINATE</span></footer>
