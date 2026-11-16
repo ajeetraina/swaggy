@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import pg from 'pg';
 
 const { Pool } = pg;
@@ -9,7 +8,6 @@ const PORT = Number(process.env.PORT || 4000);
 const profile = process.env.SECURITY_PROFILE === 'unrestricted-demo' ? 'unrestricted-demo' : 'protected';
 const destructiveEnabled = process.env.ALLOW_DESTRUCTIVE_DEMO === 'true';
 
-app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
 const sandboxUrl = (process.env.SANDBOX_URL || 'http://sandbox-worker:4100').replace(/\/$/, '');
@@ -89,7 +87,7 @@ async function runTool(name, args) {
 }
 
 app.get('/api/health', async (_req, res) => {
-  try { await pool.query('SELECT 1'); let sandbox = 'unavailable'; try { const r = await fetch(sandboxUrl + '/health', { signal: AbortSignal.timeout(1000) }); if (r.ok) sandbox = 'online'; } catch {} res.json({ ok: true, profile, approval_required: true, sandbox }); }
+  try { await pool.query('SELECT 1'); let sandbox = 'unavailable'; try { const r = await fetch(sandboxUrl + '/health', { signal: AbortSignal.timeout(1000) }); if (r.ok) sandbox = 'online'; } catch {} res.json({ ok: true, profile, approval_required: true, sandbox, model: process.env.OPENAI_MODEL || 'gpt-4o-mini', provider: (() => { try { return new URL(process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').host; } catch { return 'custom endpoint'; } })(), tool_budget: 8, max_message_chars: 4000, tools: tools.map(t => t.function.name) }); }
   catch { res.status(503).json({ ok: false }); }
 });
 app.get('/api/products', async (_req, res) => {
@@ -151,6 +149,7 @@ app.post('/api/chat', async (req, res) => {
     { role: 'user', content: message }
   ];
   const trace = [];
+  let toolCallsUsed = 0;
   try {
     for (let step = 0; step < 5; step++) {
       const response = await fetch(base + '/chat/completions', {
@@ -165,6 +164,8 @@ app.post('/api/chat', async (req, res) => {
       messages.push(assistant);
       if (!assistant.tool_calls?.length) return res.json({ reply: assistant.content || 'I could not generate a response.', trace, profile });
       for (const call of assistant.tool_calls) {
+        if (toolCallsUsed >= 8) return res.json({ reply: 'I reached the eight-tool action budget for this turn. Please narrow the request.', trace, profile });
+        toolCallsUsed += 1;
         let args = {};
         try { args = JSON.parse(call.function.arguments || '{}'); } catch { args = {}; }
         let result;
