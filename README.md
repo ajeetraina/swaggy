@@ -130,13 +130,37 @@ The filesystem endpoint resolves paths and rejects anything outside the mounted 
 
 ## The 5Cs workshop
 
-The interface has a dedicated page for each principle:
+Docker's keynote frames agent safety as four Cs — **Contain, Control, Choice,
+Capacity**. Swaggy demonstrates all four live and keeps **Coordinate** (human
+approvals + audit) as a fifth. The interface has a dedicated page for each:
 
-1. **Contain** — filesystem and network boundaries.
-2. **Control** — tool allowlists, server-side policy and prompt-injection resistance.
-3. **Choice** — configurable OpenAI-compatible model/provider and explicitly exposed capabilities.
-4. **Capacity** — CPU, memory, PID, file-size and per-turn tool budgets.
+1. **Contain** — know where agents can act: filesystem and network boundaries,
+   plus a live `GET /api/contain/status` "Verified boundaries" panel.
+2. **Control** — see and stop agent activity: a live audit stream (SSE),
+   per-run pause/resume/kill, a concurrency cap, and server-side tool policy.
+3. **Choice** — choose the agent, model and tools: swappable agent kits
+   (`kits/`) over a fixed, read-only rules file (`rules/sandbox-rules.yaml`).
+4. **Capacity** — run work beyond one laptop: per-run ceilings plus a
+   concurrency cap, a parallel-runs script, and an `sbx move --to cloud` guide.
 5. **Coordinate** — human approvals and the audit trail.
+
+See [`docs/FOUR-CS-MAP.md`](docs/FOUR-CS-MAP.md) for the principle → page →
+mechanism → live-demo → limits table.
+
+### API surface (unauthenticated local-lab endpoints)
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/chat` | Run the assistant. Accepts `run_id` (uuid) and `agent`; returns `run_id` + `status`. |
+| `POST /api/runs/:id/pause` · `/resume` · `/kill` | Control a live run. |
+| `GET /api/runs` | Recent runs with status. |
+| `GET /api/activity/stream` | Server-Sent Events feed of audit rows. |
+| `GET /api/agents` · `GET /api/rules` | Agent kits and the fixed rules summary (Choice). |
+| `GET /api/contain/status` | Live containment booleans derived from the worker (Contain). |
+| `GET /api/health` | Adds `agent`, effective `tools`, `max_concurrent_runs`, `active_runs`. |
+
+New environment variable: `MAX_CONCURRENT_RUNS` (default 4) — over the cap,
+`/api/chat` returns HTTP 429.
 
 ## Complete workshop materials
 
@@ -144,10 +168,11 @@ The five principles now have dedicated, hands-on lab guides and a timed facilita
 
 - [Workshop index and setup](docs/README.md)
 - [30-minute facilitator guide](docs/FACILITATOR-GUIDE.md)
+- [The four Cs, mapped](docs/FOUR-CS-MAP.md)
 - [Lab 1 — Contain](docs/LAB-1-CONTAIN.md)
-- [Lab 2 — Control](docs/LAB-2-CONTROL.md)
-- [Lab 3 — Choice](docs/LAB-3-CHOICE.md)
-- [Lab 4 — Capacity](docs/LAB-4-CAPACITY.md)
+- [Lab 2 — Control](docs/LAB-2-CONTROL.md) · [Lab 2b — See and stop](docs/LAB-2b-SEE-AND-STOP.md)
+- [Lab 3 — Choice](docs/LAB-3-CHOICE.md) · [Lab 3b — Swap the agent](docs/LAB-3b-SWAP-THE-AGENT.md) · [KITS.md](docs/KITS.md)
+- [Lab 4 — Capacity](docs/LAB-4-CAPACITY.md) · [Lab 6 — Scale out](docs/LAB-6-SCALE-OUT.md)
 - [Lab 5 — Coordinate](docs/LAB-5-COORDINATE.md)
 
 ## Security profiles
@@ -173,9 +198,12 @@ Both settings are required. The bulk-delete tool additionally requires the exact
 ## Architecture
 
 - `web/`: React + Vite storefront and chat UI, served by Nginx
-- `api/`: Node.js API, model tool-calling loop, server-side policy checks and audit events
-- `api/schema.sql`: synthetic product seed data and agent audit table
+- `api/`: Node.js API, model tool-calling loop, per-run control, server-side policy checks and audit events
+- `api/schema.sql`: synthetic product seed data, agent audit table and the `runs` table
+- `kits/`: swappable agent definitions (`swaggy-store`, `swaggy-auditor`) — Choice
+- `rules/sandbox-rules.yaml`: the fixed authority applied to every agent, mounted read-only into the API
 - `sandbox/`: isolated worker and public fixture files
+- `scripts/parallel-runs.sh`: start N concurrent runs to demonstrate Capacity scale-out
 - `docker-compose.yml`: PostgreSQL, API, sandbox worker and web services
 - `sbxenv.yaml`: Docker Sandbox environment — clones the repo into an isolated microVM and forwards the storefront/API ports to the host
 
@@ -184,7 +212,7 @@ Both settings are required. The bulk-delete tool additionally requires the exact
 - Products and inventory are real PostgreSQL records.
 - There is no payment flow, checkout, customer account system, or order management yet.
 - The model endpoint must support the OpenAI chat-completions tool-calling format.
-- The approval endpoints are unauthenticated and intended only for a local trusted lab. In the recommended Docker Sandbox flow the stack is isolated inside a microVM and only the forwarded ports reach your host. If you run Compose directly on a host instead, set `BIND_HOST=127.0.0.1` to keep published ports on loopback; do not expose them through a public reverse proxy or shared network.
+- The approval endpoints **and** the new run-control endpoints (`POST /api/runs/:id/pause|resume|kill`, `GET /api/runs`, `GET /api/activity/stream`, and the `run_id`/`agent` fields on `POST /api/chat`) are unauthenticated and intended only for a local trusted lab. In the recommended Docker Sandbox flow the stack is isolated inside a microVM and only the forwarded ports reach your host. If you run Compose directly on a host instead, set `BIND_HOST=127.0.0.1` to keep published ports on loopback; do not expose them through a public reverse proxy or shared network. Add authentication and authorization before any of these reach an untrusted network.
 - This is a workshop prototype, not a production commerce application. Add authentication, authorization, rate limits, CSRF protections, secret management, and stronger approval workflows before exposing it beyond a trusted local lab.
 
 ## Safety principles

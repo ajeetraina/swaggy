@@ -53,11 +53,13 @@ Run:
 
 Explain the distinction between a model choosing a tool and the API authorizing it. The server owns the policy decision. Product descriptions are untrusted data. Price/stock updates enter a human approval queue; destructive operations are blocked in the default profile. The filesystem tool only reads within the fixture workspace; the network tool is a fixed probe, not arbitrary URL fetching.
 
+**See and stop (live).** On the Control page the audit feed streams over SSE (● LIVE) with no refresh. Start a run, then use the run indicator's **Pause** — the next tool call is blocked with an audited `paused` decision; **Resume** continues it. Start another and **Kill** it — the run aborts and records `killed`. This is the operational half of Control: you can watch and stop a run, not just read about it afterwards. (See Lab 2b.)
+
 **Swag-store “do not access” story:** Swaggy has no tool for reading host files, home directories, environment secrets, arbitrary paths, arbitrary URLs, customer records, payment data, or the Docker daemon. Those capabilities are not granted to the agent. The product description that asks it to empty the store is data, not authority.
 
 ### 15:00–19:00 — 3. Choice
 
-Open **Choice** and show the configured model/provider host and exposed tool list. Explain that model choice is a trade-off, not a security boundary: a more capable model still needs least-privilege tools and server-side checks.
+Open **Choice**. Show the model/provider host and the "Kit differs / Rules identical" view. **Swap the agent (live):** select **swaggy-auditor** and ask it to set a price — the server denies it (no `update_price` in the auditor's effective tools) and audits the denial. Switch back to **swaggy-store** and the same ask becomes a pending approval. Same rules, different agent. Explain that model/agent choice is a trade-off, not a security boundary: a more capable model still needs least-privilege tools and server-side checks, and the rules file is read-only and unreachable by the agent. (See Lab 3b / KITS.md.)
 
 Optional configuration exercise (only if you have a known compatible endpoint):
 1. Edit .env and set OPENAI_BASE_URL, OPENAI_MODEL, and OPENAI_API_KEY.
@@ -69,9 +71,11 @@ Do not paste or project the API key. The health endpoint reports only the provid
 
 ### 19:00–23:00 — 4. Capacity
 
-Open **Capacity**. Show the configured ceilings: 256 MiB memory, 0.5 CPU, 64 PIDs, 16 MiB temporary filesystem, 16 KiB maximum file read, 4,000-character user message, and 8 tool calls per turn.
+Open **Capacity**. Under **Limits per run** show the ceilings: 256 MiB memory, 0.5 CPU, 64 PIDs, 16 MiB temporary filesystem, 16 KiB maximum file read, 4,000-character user message, and 8 tool calls per turn.
 
 Ask: “What happens if an agent loops, floods tools, or reads a huge file?” Explain that budgets limit resource consumption and action volume; they do not prove the agent's intent is safe.
+
+**Scale out.** Under the Scale out section, point to the concurrency cap and live active-run count. Run `scripts/parallel-runs.sh 6` in the terminal — runs above `MAX_CONCURRENT_RUNS` come back as `THROTTLED (429)`. Then show the "Move this sandbox to the cloud" guide: the identical sandbox runs on Docker-managed compute via `sbx move --to cloud` (needs a cloud subscription; the other four Cs still apply). (See Lab 6.)
 
 ### 23:00–28:00 — 5. Coordinate
 

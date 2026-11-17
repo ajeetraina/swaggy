@@ -1,3 +1,7 @@
 
 # Local environment file (holds secrets)
 .env
+
+# Dependencies and build output
+node_modules/
+dist/

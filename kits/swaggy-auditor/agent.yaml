@@ -1,0 +1,11 @@
+# Swaggy auditor agent kit — a second, deliberately different agent.
+# A read-only reviewer: it can inspect the catalogue and the public workspace
+# but is granted no mutation tools at all. Same rules file, smaller allowlist.
+# See ../../docs/KITS.md.
+name: swaggy-auditor
+description: A read-only reviewer. Inspects products and the public workspace but cannot change prices or inventory — the sandbox rules grant it no mutation tools.
+system_prompt_file: system-prompt.md
+default_model: gpt-4o-mini
+tools:
+  - list_products
+  - read_workspace_file

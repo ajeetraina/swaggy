@@ -46,6 +46,14 @@ services:
       SECURITY_PROFILE: ${SECURITY_PROFILE:-protected}
       ALLOW_DESTRUCTIVE_DEMO: ${ALLOW_DESTRUCTIVE_DEMO:-false}
       SANDBOX_URL: http://sandbox-worker:4100
+      MAX_CONCURRENT_RUNS: ${MAX_CONCURRENT_RUNS:-4}
+      KITS_DIR: /app/kits
+      RULES_FILE: /app/rules/sandbox-rules.yaml
+    volumes:
+      # Agent kits and the authority rules are loaded by the API at startup.
+      # The rules are mounted read-only and are not editable through the API.
+      - ./kits:/app/kits:ro
+      - ./rules:/app/rules:ro
     depends_on:
       db:
         condition: service_healthy

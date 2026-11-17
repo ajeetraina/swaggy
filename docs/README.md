@@ -5,11 +5,20 @@ A hands-on workshop for understanding the five security principles for AI agents
 ## Start here
 
 1. [Facilitator run sheet](FACILITATOR-GUIDE.md) — a ready-to-deliver 30-minute session.
-2. [Lab 1 — Contain](LAB-1-CONTAIN.md) — filesystem and network isolation.
-3. [Lab 2 — Control](LAB-2-CONTROL.md) — tool allowlists, policy enforcement, prompt injection and denied access.
-4. [Lab 3 — Choice](LAB-3-CHOICE.md) — choose a model/provider and deliberately expose capabilities.
-5. [Lab 4 — Capacity](LAB-4-CAPACITY.md) — resource and action budgets.
-6. [Lab 5 — Coordinate](LAB-5-COORDINATE.md) — human approval and auditability.
+2. [The four Cs, mapped](FOUR-CS-MAP.md) — one table: principle → page → mechanism → live demo → limits.
+3. [Lab 1 — Contain](LAB-1-CONTAIN.md) — filesystem and network isolation.
+4. [Lab 2 — Control](LAB-2-CONTROL.md) — tool allowlists, policy enforcement, prompt injection and denied access.
+   - [Lab 2b — See and stop](LAB-2b-SEE-AND-STOP.md) — live activity stream, pause/resume/kill, concurrency cap.
+5. [Lab 3 — Choice](LAB-3-CHOICE.md) — choose a model/provider and deliberately expose capabilities.
+   - [Lab 3b — Swap the agent](LAB-3b-SWAP-THE-AGENT.md) — swappable kits over fixed rules ([KITS.md](KITS.md)).
+6. [Lab 4 — Capacity](LAB-4-CAPACITY.md) — resource and action budgets.
+   - [Lab 6 — Scale out](LAB-6-SCALE-OUT.md) — parallel runs and moving the sandbox to the cloud.
+7. [Lab 5 — Coordinate](LAB-5-COORDINATE.md) — human approval and auditability.
+
+The keynote frames agent safety as **Contain, Control, Choice, Capacity**;
+Swaggy keeps **Coordinate** (human approvals + audit) as a fifth C. The `b`/`6`
+labs are the newer, live-demonstrable halves of Control, Choice and Capacity;
+the facilitator guide folds them into the same 30 minutes.
 
 ## Before the workshop
 

@@ -24,3 +24,9 @@ ports:
     host: 5173
   - sandbox: 4000   # API
     host: 4000
+
+# Capacity / scale-out: this same sandbox can run on Docker-managed cloud
+# compute. Move it with `sbx move <name> --to cloud`, then `sbx --cloud attach
+# <name>`; cloud sandboxes need a Docker cloud subscription and use credentials
+# set separately with `sbx --cloud secret set`. See docs/LAB-6-SCALE-OUT.md.
+# (Verified against sbx v0.54; do not change ports or add host mounts here.)
