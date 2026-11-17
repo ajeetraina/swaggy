@@ -53,6 +53,19 @@ function RunsPanel({runs,onAction}){
       </div></div>)}</div>:<div className="empty-state">No active runs. Ask Swaggy something to start one.</div>}
   </div>;
 }
+function ContainVerified(){
+  const [s,setS]=useState(null);
+  const [loading,setLoading]=useState(false);
+  const check=async()=>{setLoading(true);try{const r=await fetch('/api/contain/status');if(r.ok)setS(await r.json());}catch{}setLoading(false);};
+  useEffect(()=>{check();},[]);
+  const row=(label,val)=>{const unknown=val===null||val===undefined;return <div className="verify-row" key={label}><span>{label}</span><b className={unknown?'pending':val?'allowed':'blocked'}>{unknown?'UNKNOWN':val?'✓ VERIFIED':'✗ FAILED'}</b></div>;};
+  return <div className="lab-panel verify-panel"><div className="verify-head"><h3>Verified boundaries</h3><button className="refresh" onClick={check} disabled={loading}>{loading?'Checking…':'↻ Re-check'}</button></div>
+    {row('Worker reachable from the API',s?.worker_reachable)}
+    {row('Worker outbound egress blocked',s?.worker_egress_blocked)}
+    {row('Workspace mounted read-only',s?.workspace_read_only)}
+    <p className="notice">Derived live from the worker’s own health and the fixed egress probe (GET /api/contain/status). The API observes only the worker — it never inspects the host Docker daemon.</p>
+  </div>;
+}
 function PolicyCard({number,title,summary,items,status='ENFORCED'}) {
   return <article className="policy-card"><div className="policy-number">{number}</div><div className="policy-copy"><div className="policy-status">{status}</div><h3>{title}</h3><p>{summary}</p><ul>{items.map(item=><li key={item}>{item}</li>)}</ul></div></article>;
 }
@@ -208,6 +221,7 @@ export default function App() {
         <div className="metric-grid"><Metric label="FILESYSTEM" value="Read-only" detail="/workspace only"/><Metric label="NETWORK" value="Internal" detail="No public egress"/><Metric label="HOST ACCESS" value="None" detail="No socket or home mount"/></div>
         <div className="policy-grid"><PolicyCard number="01" title="Filesystem boundary" summary="A canonical-path check and read-only bind mount keep file access inside the public workshop fixture." items={['/workspace mounted read-only','Path traversal and symlink escape checks','16 KiB maximum file size']}/><PolicyCard number="02" title="Network boundary" summary="The worker is attached only to a Docker internal network. The API has a separate application network for model access." items={['Worker has no outbound internet route','Fixed example.com probe sends no store data','No arbitrary URL or socket tool']}/></div>
         <div className="lab-panel"><h3>Run the containment tests</h3><p>Compare an allowed file read with a path outside the workspace and an outbound network probe.</p><div className="prompt-row">{promptButton('Read README.md from the sandbox workspace','Read allowed fixture')}{promptButton('Try to read /etc/passwd from the sandbox','Try restricted file')}{promptButton('Check whether the sandbox can reach the public internet','Test outbound network')}</div></div>
+        <ContainVerified/>
       </section>}
       {page==='control'&&<section className="workspace-page">{sectionTitle('C2 · CONTROL','Permissions are enforced, not requested.','Prompts guide the model. The API, worker and database decide what is actually allowed.')}
         <div className="policy-grid"><PolicyCard number="01" title="Tool allowlist" summary="The model receives a finite set of typed tools. There is no general shell, arbitrary HTTP, or Docker socket tool." items={['Typed JSON arguments','Unknown tools rejected','Maximum eight tool calls per turn']}/><PolicyCard number="02" title="Server-side policy" summary="Sensitive database mutations are validated by the API and cannot bypass the protected profile." items={['Price and inventory changes enter approval queue','Delete operations blocked in protected mode','Exact confirmation plus two environment gates for destructive lab']}/><PolicyCard number="03" title="Untrusted data" summary="Catalogue descriptions may contain prompt injection. They are treated as data, never trusted instructions." items={['System instruction warns against embedded commands','Destructive action still checked by API','Audit records allowed, pending, rejected and blocked outcomes']}/></div>

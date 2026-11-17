@@ -107,6 +107,13 @@ main{flex:1;min-width:0}
 .subhead{font:600 15px 'DM Mono';letter-spacing:1px;color:#35474e;margin:34px 0 2px;text-transform:uppercase}
 .subhead:first-of-type{margin-top:8px}
 
+/* Contain (C1): verified-boundaries panel */
+.verify-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.verify-head h3{margin:0}
+.verify-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #d7dcd4;font-size:13px;color:#35474e}
+.verify-row b{font:11px 'DM Mono';letter-spacing:.5px}
+.verify-panel .notice{margin-top:16px}
+
 @media(max-width:1050px){
   .shell-body{flex-direction:column}
   .cs-sidebar{width:100%;align-self:auto;padding:16px 5%}

@@ -259,6 +259,25 @@ export function createApp(options = {}) {
   // agent can reach it, and it never exposes the file path contents for editing.
   app.get('/api/rules', (_req, res) => res.json(rulesSummary()));
 
+  // Contain (C1): booleans derived only from what the API can observe about the
+  // worker — the worker's own health and the existing egress probe. The API
+  // never shells out to the host or inspects the host Docker daemon.
+  app.get('/api/contain/status', async (_req, res) => {
+    let workerReachable = false, workspaceReadOnly = false, egressBlocked = null;
+    try {
+      const r = await doFetch(sandboxUrl + '/health', { signal: AbortSignal.timeout(1500) });
+      if (r.ok) { const h = await r.json(); workerReachable = true; workspaceReadOnly = h.workspace === 'read-only'; }
+    } catch {}
+    if (workerReachable) {
+      try {
+        const r = await doFetch(sandboxUrl + '/v1/network-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(4000) });
+        const j = await r.json();
+        egressBlocked = j.reachable === false || j.blocked === true;
+      } catch { egressBlocked = null; }
+    }
+    res.json({ worker_reachable: workerReachable, worker_egress_blocked: egressBlocked, workspace_read_only: workspaceReadOnly });
+  });
+
   app.get('/api/products', async (_req, res) => {
     const result = await pool.query('SELECT sku,name,description,category,price_cents,stock FROM products ORDER BY id');
     res.json(result.rows.map(p => ({ ...p, price_rupees: p.price_cents / 100 })));
