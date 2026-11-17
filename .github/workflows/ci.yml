@@ -23,6 +23,13 @@ jobs:
         run: node --check sandbox/server.js
       - name: Test sandbox path policy
         run: node --test sandbox/*.test.js
+      - name: Install API dependencies
+        working-directory: api
+        run: npm ci
+      - name: Run API tests (hermetic — no DB, no model key)
+        run: node --test api/*.test.js
+      - name: Run containment regression test
+        run: node --test test/*.test.js
       - name: Validate Compose
         run: docker compose config --quiet
       - name: Install frontend dependencies
