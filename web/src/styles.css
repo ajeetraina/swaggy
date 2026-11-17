@@ -103,6 +103,10 @@ main{flex:1;min-width:0}
 .rules-row b{color:#fff;text-align:right;font-weight:500;overflow-wrap:anywhere}
 @media(max-width:900px){.choice-compare{grid-template-columns:1fr}}
 
+/* Capacity (C4): section subheads for limits-per-run vs scale-out */
+.subhead{font:600 15px 'DM Mono';letter-spacing:1px;color:#35474e;margin:34px 0 2px;text-transform:uppercase}
+.subhead:first-of-type{margin-top:8px}
+
 @media(max-width:1050px){
   .shell-body{flex-direction:column}
   .cs-sidebar{width:100%;align-self:auto;padding:16px 5%}
