@@ -63,6 +63,23 @@ main{flex:1;min-width:0}
 .swaggy-launcher-whale{display:inline-flex;align-items:center}
 .swaggy-widget-avatar svg{color:#0b214a}
 
+/* Control (C2): live runs panel, decision badges, stream indicator */
+.killed{color:#d44e3d!important}.resumed{color:#16845c!important}
+.stream-dot{font:10px 'DM Mono';letter-spacing:1px}.stream-dot.on{color:#29986c}.stream-dot.off{color:#b8791c}
+.runs-panel{margin:30px 0}.runs-list{background:#fff;border:1px solid #e4e3dc}
+.run-row{display:grid;grid-template-columns:90px 1fr auto auto;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid #edf0ed;font:12px 'DM Mono'}
+.run-row:last-child{border:0}.run-id{color:#26373e;font-weight:500}.run-agent{color:#69797e}
+.run-actions{display:flex;gap:8px}
+.run-actions button,.run-indicator-actions button{border:1px solid #dfe4df;background:#fff;color:#35474e;padding:7px 13px;font:10px 'DM Mono';cursor:pointer;border-radius:6px}
+.run-actions button:hover,.run-indicator-actions button:hover{border-color:#ff805a}
+.run-actions .kill,.run-indicator-actions .kill{background:#fbe9e6;color:#b54c3d;border-color:#eccbc5}
+.run-indicator{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:0 12px;background:#142630;color:#dce7ea;border-radius:10px;font:11px 'DM Mono'}
+.run-indicator b{color:#fff}.run-indicator-actions{margin-left:auto;display:flex;gap:7px}
+.run-indicator-actions button{background:#1d3340;color:#dce7ea;border-color:#2c4552}
+.run-indicator-dot{width:8px;height:8px;border-radius:50%;background:#70d6a2;animation:run-pulse 1.3s ease-in-out infinite}
+@keyframes run-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:600px){.run-row{grid-template-columns:1fr auto;gap:8px}.run-agent{display:none}}
+
 @media(max-width:1050px){
   .shell-body{flex-direction:column}
   .cs-sidebar{width:100%;align-self:auto;padding:16px 5%}

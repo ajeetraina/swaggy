@@ -35,3 +35,14 @@ CREATE TABLE IF NOT EXISTS pending_actions (
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
   resolved_at TIMESTAMPTZ
 );
+
+-- Control (C2): one row per assistant run so a reviewer can watch and stop it.
+-- The seed only runs on first DB init, so the API also creates this table at
+-- startup (see ensureRunsTable in server.js) for existing databases.
+CREATE TABLE IF NOT EXISTS runs (
+  id TEXT PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'running' CHECK (status IN ('running','paused','killed','completed')),
+  agent TEXT NOT NULL,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ended_at TIMESTAMPTZ
+);
