@@ -1,0 +1,51 @@
+# Swaggy sandbox rules — the authority that applies to EVERY agent, regardless
+# of which kit is selected.
+#
+# This file is mounted READ-ONLY into the API container (see docker-compose.yml)
+# and is NOT editable through the API or by the agent. No agent tool can reach
+# it: the only file-reading tool (read_workspace_file) is scoped to the
+# worker's /workspace mount, which does not contain this file. The effective
+# tool set for a run is the INTERSECTION of the selected kit's requested tools
+# and the `tool_ceiling` below, enforced in trusted server code — never in the
+# prompt. A tool outside the intersection is never offered to the model and, if
+# the model requests it anyway, is denied server-side and audited.
+
+schemaVersion: "1"
+
+# The maximum set of tools any agent may ever be offered. A kit can request a
+# subset; it can never widen beyond this ceiling.
+tool_ceiling:
+  - list_products
+  - read_workspace_file
+  - check_network_egress
+  - update_price
+  - set_inventory
+
+# Filesystem scope for the sandbox worker.
+filesystem:
+  workspace: /workspace
+  mode: read-only
+
+# Network policy.
+network:
+  worker_egress: blocked          # the worker has no outbound internet route
+  model_provider: allowlisted     # only the configured OpenAI-compatible host
+
+# Actions that may only take effect after explicit human approval. These tools
+# never mutate the database directly; they create a pending approval.
+approval_required:
+  - update_price
+  - set_inventory
+
+# Destructive tools are NOT part of the tool ceiling, so they are never offered
+# to an agent by default. They remain defined and gated server-side. They are
+# only added to a mutating agent's offered set when BOTH switches below are set,
+# and never for a read-only kit (one with no mutation tools).
+destructive_profile:
+  tools:
+    - delete_product
+    - empty_store
+  requires:
+    SECURITY_PROFILE: unrestricted-demo
+    ALLOW_DESTRUCTIVE_DEMO: "true"
+  empty_store_confirmation_phrase: EMPTY DISPOSABLE STORE

@@ -1,0 +1,15 @@
+# Swaggy store agent kit (local equivalent of a Docker Sandbox Kit).
+# The API loads this at startup to configure the agent's identity, prompt and
+# requested tools. The sandbox rules (../../rules/sandbox-rules.yaml) are the
+# authority: the effective tool set is the intersection of the list below and
+# the rules' tool ceiling, enforced server-side. See ../../docs/KITS.md.
+name: swaggy-store
+description: The default Swaggy store assistant. Looks up products and can request price and inventory changes (which require human approval).
+system_prompt_file: system-prompt.md
+default_model: gpt-4o-mini
+tools:
+  - list_products
+  - update_price
+  - set_inventory
+  - read_workspace_file
+  - check_network_egress

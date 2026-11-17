@@ -77,6 +77,9 @@ export default function App() {
   const [runs,setRuns]=useState([]);
   const [liveRunId,setLiveRunId]=useState(null);
   const [streamOk,setStreamOk]=useState(false);
+  const [agents,setAgents]=useState([]);
+  const [rules,setRules]=useState(null);
+  const [selectedAgent,setSelectedAgent]=useState('swaggy-store');
   const [messages,setMessages]=useState([{role:'assistant',content:"Hey! I'm Swaggy 👋 I'm your AI store employee. Ask me to explore the catalogue or try one of the security labs."}]);
   const [input,setInput]=useState('');
   const [busy,setBusy]=useState(false);
@@ -95,12 +98,13 @@ export default function App() {
 
   async function refresh() {
     try {
-      const [p,a,h,pending,r]=await Promise.all([fetch('/api/products'),fetch('/api/activity'),fetch('/api/health'),fetch('/api/approvals'),fetch('/api/runs')]);
+      const [p,a,h,pending,r,ag]=await Promise.all([fetch('/api/products'),fetch('/api/activity'),fetch('/api/health'),fetch('/api/approvals'),fetch('/api/runs'),fetch('/api/agents')]);
       if(p.ok)setProducts(await p.json());
       if(a.ok)setActivity(await a.json());
       if(h.ok){const health=await h.json();setProfile(health.profile);setConfig(health);}
       if(pending.ok)setApprovals(await pending.json());
       if(r.ok)setRuns(await r.json());
+      if(ag.ok){const data=await ag.json();setAgents(data.agents||[]);setRules(data.rules||null);}
       setError('');
     } catch {setError('Cannot reach the Swaggy API. Start the Docker Compose stack.');}
   }
@@ -135,7 +139,7 @@ export default function App() {
     setMessages(prev=>[...prev,{role:'user',content:prompt}]);
     setInput('');setBusy(true);setError('');
     try {
-      const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,run_id:runId})});
+      const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,run_id:runId,agent:selectedAgent})});
       const data=await response.json();
       if(!response.ok)throw new Error(data.error||'Chat request failed');
       setMessages(prev=>[...prev,{role:'assistant',content:data.reply,trace:data.trace||[],status:data.status}]);
@@ -211,11 +215,34 @@ export default function App() {
         <RunsPanel runs={runs} onAction={runAction}/>
         <ActivityFeed activity={activity} streamOk={streamOk}/>
       </section>}
-      {page==='choice'&&<section className="workspace-page">{sectionTitle('C3 · CHOICE','Choose the model. Limit the tools.','Swaggy uses an OpenAI-compatible endpoint so the model/provider can be configured without changing the store API.')}
-        <div className="metric-grid"><Metric label="MODEL" value={config.model||'Loading'} detail="From OPENAI_MODEL"/><Metric label="ENDPOINT" value={config.provider||'Loading'} detail="Host only; API key never exposed"/><Metric label="TOOL MODE" value="Auto" detail="OpenAI-compatible function calling"/></div>
-        <div className="policy-grid"><PolicyCard number="A" title="Provider choice" summary="Point OPENAI_BASE_URL at a compatible endpoint and set the model name in the environment." items={['Cloud or local OpenAI-compatible endpoint','Credentials remain server-side','No API key returned to the browser']}/><PolicyCard number="B" title="Capability choice" summary="The model can only choose from tools explicitly provided by the API." items={(config.tools||[]).map(t=>'Tool: '+t)}/></div>
-        <div className="lab-panel"><h3>Configure in .env</h3><pre className="config-code">OPENAI_BASE_URL=https://api.openai.com/v1{ '\n' }OPENAI_MODEL=gpt-4o-mini{ '\n' }OPENAI_API_KEY=your_key</pre><p>Use a model endpoint that supports the OpenAI chat-completions tool-calling format. The UI deliberately never displays credentials.</p></div>
-      </section>}
+      {page==='choice'&&(()=>{
+        const store=agents.find(a=>a.name==='swaggy-store');
+        const auditor=agents.find(a=>a.name==='swaggy-auditor');
+        const sel=agents.find(a=>a.name===selectedAgent)||store;
+        const kitCard=a=>a&&<article className={'kit-card '+(selectedAgent===a.name?'selected':'')}>
+          <div className="kit-head"><label className="kit-radio"><input type="radio" name="agent" checked={selectedAgent===a.name} onChange={()=>setSelectedAgent(a.name)}/><b>{a.name}</b></label><span className="kit-tag">{a.name===selectedAgent?'ACTIVE':'KIT'}</span></div>
+          <p>{a.description}</p>
+          <div className="kit-tools-head">EFFECTIVE TOOLS</div>
+          <ul className="kit-tools">{a.effective_tools.map(t=><li key={t}>{t}</li>)}</ul>
+        </article>;
+        return <section className="workspace-page">{sectionTitle('C3 · CHOICE','Choose the agent, model and tools.','The agent is a swappable, packaged kit. The rules that bound every agent are fixed, mounted read-only, and outside the agent’s control.')}
+        <div className="metric-grid"><Metric label="ACTIVE AGENT" value={selectedAgent} detail="Swappable kit"/><Metric label="MODEL" value={sel?.model||config.model||'Loading'} detail="OpenAI-compatible endpoint"/><Metric label="ENDPOINT" value={config.provider||'Loading'} detail="Host only; key never exposed"/><Metric label="EFFECTIVE TOOLS" value={sel?.effective_tools?.length??'—'} detail="kit ∩ rules ceiling"/></div>
+        <div className="choice-compare">
+          <div className="choice-kits"><div className="choice-col-head">KIT DIFFERS <span>choose the agent</span></div><div className="kit-grid">{kitCard(store)}{kitCard(auditor)}</div></div>
+          <div className="choice-rules"><div className="choice-col-head">RULES IDENTICAL <span>same for every agent</span></div>
+            <article className="rules-card">
+              <div className="rules-badge">READ-ONLY AUTHORITY</div>
+              <p className="rules-source">{rules?.source||'rules/sandbox-rules.yaml'}</p>
+              <div className="rules-row"><span>Tool ceiling</span><b>{(rules?.tool_ceiling||[]).join(', ')||'—'}</b></div>
+              <div className="rules-row"><span>Filesystem</span><b>{rules?.filesystem?`${rules.filesystem.workspace} (${rules.filesystem.mode})`:'—'}</b></div>
+              <div className="rules-row"><span>Network</span><b>{rules?.network?`worker egress ${rules.network.worker_egress}; provider ${rules.network.model_provider}`:'—'}</b></div>
+              <div className="rules-row"><span>Approval required</span><b>{(rules?.approval_required||[]).join(', ')||'—'}</b></div>
+              <div className="rules-row"><span>Destructive gated</span><b>{rules?rules.destructive_gated?'exposed (demo profile)':'blocked':'—'}</b></div>
+            </article>
+          </div>
+        </div>
+        <div className="lab-panel"><h3>Swap the agent, keep the rules</h3><p>Select <b>swaggy-auditor</b> above, then ask it to change a price. The auditor has no mutation tools, so the server denies the call and records it in Activity — the rules did not change, only the agent did.</p><div className="prompt-row">{promptButton('Set the Whale Mascot Socks price to ₹1','Ask the selected agent to change a price')}{promptButton('List all products and their stock','Ask the selected agent to read')}</div></div>
+      </section>;})()}
       {page==='capacity'&&<section className="workspace-page">{sectionTitle('C4 · CAPACITY','Bound the work an agent can do.','Resource limits and action budgets reduce the impact of runaway or abusive workloads.')}
         <div className="metric-grid"><Metric label="WORKER MEMORY" value="256 MiB" detail="Compose container limit"/><Metric label="CPU" value="0.50" detail="Compose CPU quota"/><Metric label="PROCESS COUNT" value="64" detail="PID limit"/><Metric label="TOOL BUDGET" value={config.tool_budget||8} detail="Maximum tool calls per turn"/></div>
         <div className="policy-grid"><PolicyCard number="01" title="Runtime resources" summary="The worker is constrained independently of the API process." items={['256 MiB memory limit','0.5 CPU limit','64 process limit','Read-only root filesystem']}/><PolicyCard number="02" title="Workload limits" summary="The API limits input size, tool calls, file reads and request timeouts." items={['4,000 character chat input','Eight tool calls per turn','16 KiB file-read ceiling','Short network probe timeout']}/></div>
